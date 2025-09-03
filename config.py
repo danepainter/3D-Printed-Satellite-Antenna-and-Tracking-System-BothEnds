@@ -1,0 +1,1 @@
+'''This file is used to configure the database and the API'''
