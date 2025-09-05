@@ -1,0 +1,178 @@
+import React, { useState, useEffect } from 'react';
+import { MapPin, Clock, Navigation, Target } from 'lucide-react';
+import './SatelliteTracker.css';
+
+const SatelliteTracker = () => {
+  const [satellites, setSatellites] = useState([
+    {
+      id: 1,
+      name: 'ISS',
+      elevation: 45,
+      azimuth: 120,
+      distance: 408,
+      status: 'tracking'
+    },
+    {
+      id: 2,
+      name: 'NOAA-18',
+      elevation: 30,
+      azimuth: 200,
+      distance: 850,
+      status: 'visible'
+    },
+    {
+      id: 3,
+      name: 'METEOR-M2',
+      elevation: 15,
+      azimuth: 300,
+      distance: 820,
+      status: 'visible'
+    }
+  ]);
+
+  const [selectedSatellite, setSelectedSatellite] = useState(satellites[0]);
+
+  useEffect(() => {
+    // Simulate real-time satellite position updates
+    const interval = setInterval(() => {
+      setSatellites(prev => prev.map(sat => ({
+        ...sat,
+        elevation: Math.max(0, Math.min(90, sat.elevation + (Math.random() - 0.5) * 2)),
+        azimuth: (sat.azimuth + (Math.random() - 0.5) * 4 + 360) % 360
+      })));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'tracking': return '#00ff88';
+      case 'visible': return '#00d4ff';
+      case 'hidden': return '#ff6b6b';
+      default: return '#888';
+    }
+  };
+
+  const getStatusText = (status) => {
+    switch (status) {
+      case 'tracking': return 'Tracking';
+      case 'visible': return 'Visible';
+      case 'hidden': return 'Hidden';
+      default: return 'Unknown';
+    }
+  };
+
+  return (
+    <div className="satellite-tracker">
+      <div className="tracker-header">
+        <h2>Satellite Tracker</h2>
+        <p>Real-time satellite positions and tracking information</p>
+      </div>
+
+      <div className="tracker-content">
+        <div className="satellite-list">
+          <h3>Available Satellites</h3>
+          <div className="satellites">
+            {satellites.map(satellite => (
+              <div
+                key={satellite.id}
+                className={`satellite-item ${selectedSatellite.id === satellite.id ? 'selected' : ''}`}
+                onClick={() => setSelectedSatellite(satellite)}
+              >
+                <div className="satellite-info">
+                  <h4>{satellite.name}</h4>
+                  <div className="satellite-status">
+                    <div 
+                      className="status-indicator"
+                      style={{ backgroundColor: getStatusColor(satellite.status) }}
+                    ></div>
+                    {getStatusText(satellite.status)}
+                  </div>
+                </div>
+                <div className="satellite-position">
+                  <div className="position-item">
+                    <span className="label">Elevation:</span>
+                    <span className="value">{satellite.elevation.toFixed(1)}°</span>
+                  </div>
+                  <div className="position-item">
+                    <span className="label">Azimuth:</span>
+                    <span className="value">{satellite.azimuth.toFixed(1)}°</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="tracking-details">
+          <h3>Tracking Details</h3>
+          <div className="details-card">
+            <div className="detail-header">
+              <Target className="detail-icon" />
+              <h4>{selectedSatellite.name}</h4>
+            </div>
+            
+            <div className="detail-grid">
+              <div className="detail-item">
+                <Navigation className="detail-icon" />
+                <div className="detail-content">
+                  <span className="detail-label">Elevation</span>
+                  <span className="detail-value">{selectedSatellite.elevation.toFixed(1)}°</span>
+                </div>
+              </div>
+              
+              <div className="detail-item">
+                <MapPin className="detail-icon" />
+                <div className="detail-content">
+                  <span className="detail-label">Azimuth</span>
+                  <span className="detail-value">{selectedSatellite.azimuth.toFixed(1)}°</span>
+                </div>
+              </div>
+              
+              <div className="detail-item">
+                <Clock className="detail-icon" />
+                <div className="detail-content">
+                  <span className="detail-label">Distance</span>
+                  <span className="detail-value">{selectedSatellite.distance} km</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="tracking-controls">
+              <button className="track-btn primary">
+                Start Tracking
+              </button>
+              <button className="track-btn secondary">
+                Stop Tracking
+              </button>
+            </div>
+          </div>
+
+          <div className="position-visualization">
+            <h4>Antenna Position</h4>
+            <div className="compass">
+              <div className="compass-ring">
+                <div className="compass-needle" style={{
+                  transform: `rotate(${selectedSatellite.azimuth}deg)`
+                }}></div>
+                <div className="compass-center"></div>
+              </div>
+              <div className="elevation-indicator">
+                <div className="elevation-bar">
+                  <div 
+                    className="elevation-fill"
+                    style={{ height: `${(selectedSatellite.elevation / 90) * 100}%` }}
+                  ></div>
+                </div>
+                <span className="elevation-label">Elevation</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default SatelliteTracker;
