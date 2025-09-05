@@ -10,7 +10,7 @@ const SatelliteTracker = () => {
       elevation: 45,
       azimuth: 120,
       distance: 408,
-      status: 'tracking'
+      status: 'visible'
     },
     {
       id: 2,
@@ -31,6 +31,7 @@ const SatelliteTracker = () => {
   ]);
 
   const [selectedSatellite, setSelectedSatellite] = useState(satellites[0]);
+  const [isTracking, setIsTracking] = useState(false);
 
   useEffect(() => {
     // Simulate real-time satellite position updates
@@ -44,6 +45,14 @@ const SatelliteTracker = () => {
 
     return () => clearInterval(interval);
   }, []);
+
+  // Update selected satellite when satellites array changes
+  useEffect(() => {
+    const updatedSelected = satellites.find(sat => sat.id === selectedSatellite.id);
+    if (updatedSelected) {
+      setSelectedSatellite(updatedSelected);
+    }
+  }, [satellites, selectedSatellite.id]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -63,6 +72,38 @@ const SatelliteTracker = () => {
     }
   };
 
+  const handleStartTracking = () => {
+    setIsTracking(true);
+    setSatellites(prev => prev.map(sat => 
+      sat.id === selectedSatellite.id 
+        ? { ...sat, status: 'tracking' }
+        : sat.status === 'tracking' 
+          ? { ...sat, status: 'visible' }
+          : sat
+    ));
+  };
+
+  const handleStopTracking = () => {
+    setIsTracking(false);
+    setSatellites(prev => prev.map(sat => 
+      sat.id === selectedSatellite.id 
+        ? { ...sat, status: 'visible' }
+        : sat
+    ));
+  };
+
+  const handleSatelliteSelect = (satellite) => {
+    setSelectedSatellite(satellite);
+    // If we're currently tracking a different satellite, stop tracking it
+    if (isTracking && satellite.id !== selectedSatellite.id) {
+      setSatellites(prev => prev.map(sat => 
+        sat.id === selectedSatellite.id 
+          ? { ...sat, status: 'visible' }
+          : sat
+      ));
+    }
+  };
+
   return (
     <div className="satellite-tracker">
       <div className="tracker-header">
@@ -78,7 +119,7 @@ const SatelliteTracker = () => {
               <div
                 key={satellite.id}
                 className={`satellite-item ${selectedSatellite.id === satellite.id ? 'selected' : ''}`}
-                onClick={() => setSelectedSatellite(satellite)}
+                onClick={() => handleSatelliteSelect(satellite)}
               >
                 <div className="satellite-info">
                   <h4>{satellite.name}</h4>
@@ -140,10 +181,18 @@ const SatelliteTracker = () => {
             </div>
 
             <div className="tracking-controls">
-              <button className="track-btn primary">
-                Start Tracking
+              <button 
+                className="track-btn primary"
+                onClick={handleStartTracking}
+                disabled={selectedSatellite.status === 'tracking'}
+              >
+                {selectedSatellite.status === 'tracking' ? 'Tracking...' : 'Start Tracking'}
               </button>
-              <button className="track-btn secondary">
+              <button 
+                className="track-btn secondary"
+                onClick={handleStopTracking}
+                disabled={selectedSatellite.status !== 'tracking'}
+              >
                 Stop Tracking
               </button>
             </div>

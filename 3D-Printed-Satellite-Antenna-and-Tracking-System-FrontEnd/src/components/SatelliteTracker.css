@@ -1,3 +1,505 @@
+.satellite-tracker {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  padding: 2rem;
+  color: white;
+}
 
+.tracker-header {
+  text-align: center;
+  margin-bottom: 3rem;
+  padding: 2rem 0;
+}
 
+.tracker-header h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin: 0 0 1rem 0;
+  background: linear-gradient(135deg, #3b82f6 0%, #00d4ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tracker-header p {
+  font-size: 1.1rem;
+  color: #94a3b8;
+  margin: 0;
+  font-weight: 300;
+}
+
+.tracker-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.satellite-list {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.satellite-list h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.satellites {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.satellite-item {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.satellite-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #3b82f6, #00d4ff, #00ff88);
+  border-radius: 12px 12px 0 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.satellite-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.satellite-item:hover::before {
+  opacity: 1;
+}
+
+.satellite-item.selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.2);
+}
+
+.satellite-item.selected::before {
+  opacity: 1;
+}
+
+.satellite-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.satellite-info h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.satellite-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.satellite-position {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.position-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.position-item:last-child {
+  border-bottom: none;
+}
+
+.position-item .label {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.position-item .value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: white;
+}
+
+.tracking-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.tracking-details h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.details-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-icon {
+  width: 24px;
+  height: 24px;
+  color: #00d4ff;
+}
+
+.detail-header h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  color: white;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.detail-label {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+}
+
+.tracking-controls {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.track-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.track-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.5s ease;
+}
+
+.track-btn:hover::before {
+  left: 100%;
+}
+
+.track-btn.primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #00d4ff 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.track-btn.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.track-btn.secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.track-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.track-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+.track-btn:disabled:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.track-btn:disabled::before {
+  display: none;
+}
+
+.position-visualization {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.position-visualization h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.compass {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+}
+
+.compass-ring {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  border: 3px solid rgba(59, 130, 246, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compass-needle {
+  position: absolute;
+  width: 4px;
+  height: 80px;
+  background: linear-gradient(180deg, #00d4ff 0%, #3b82f6 100%);
+  border-radius: 2px;
+  transform-origin: bottom center;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+  transition: transform 0.5s ease;
+}
+
+.compass-center {
+  width: 12px;
+  height: 12px;
+  background: #00d4ff;
+  border-radius: 50%;
+  box-shadow: 0 0 15px rgba(0, 212, 255, 0.7);
+}
+
+.elevation-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.elevation-bar {
+  width: 20px;
+  height: 200px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.elevation-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #00ff88 0%, #00d4ff 100%);
+  border-radius: 10px;
+  transition: height 0.5s ease;
+  box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.elevation-label {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 500;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .tracker-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .compass {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .elevation-label {
+    writing-mode: horizontal-tb;
+    text-orientation: initial;
+  }
+}
+
+@media (max-width: 768px) {
+  .satellite-tracker {
+    padding: 1rem;
+  }
+  
+  .tracker-header h2 {
+    font-size: 2rem;
+  }
+  
+  .tracker-header p {
+    font-size: 1rem;
+  }
+  
+  .satellite-list,
+  .details-card,
+  .position-visualization {
+    padding: 1.5rem;
+  }
+  
+  .satellite-position {
+    grid-template-columns: 1fr;
+  }
+  
+  .tracking-controls {
+    flex-direction: column;
+  }
+  
+  .compass-ring {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .compass-needle {
+    height: 60px;
+  }
+  
+  .elevation-bar {
+    height: 150px;
+  }
+}
+
+@media (max-width: 480px) {
+  .satellite-tracker {
+    padding: 0.5rem;
+  }
+  
+  .tracker-header {
+    margin-bottom: 2rem;
+    padding: 1rem 0;
+  }
+  
+  .tracker-header h2 {
+    font-size: 1.75rem;
+  }
+  
+  .satellite-list,
+  .details-card,
+  .position-visualization {
+    padding: 1rem;
+  }
+  
+  .satellite-item {
+    padding: 1rem;
+  }
+  
+  .compass-ring {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .compass-needle {
+    height: 50px;
+  }
+  
+  .elevation-bar {
+    height: 120px;
+  }
+}
 
