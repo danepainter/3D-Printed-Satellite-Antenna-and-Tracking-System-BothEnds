@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Satellite, Activity, Settings } from 'lucide-react';
+import { Satellite, Activity } from 'lucide-react';
 import './Header.css';
 
 const Header = () => {
@@ -9,7 +9,6 @@ const Header = () => {
   const navItems = [
     { path: '/', label: 'Dashboard', icon: Activity },
     { path: '/tracker', label: 'Satellite Tracker', icon: Satellite },
-    { path: '/antenna', label: 'Antenna Control', icon: Settings },
   ];
 
   return (

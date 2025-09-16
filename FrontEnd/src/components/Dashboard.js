@@ -1,32 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Activity, Satellite, Wifi, TrendingUp } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import './Dashboard.css';
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [systemStatus, setSystemStatus] = useState({
     antenna: 'Connected',
     tracking: 'Active',
     signal: 'Strong',
     satellites: 12
   });
-
-  const [signalData, setSignalData] = useState([]);
-
-  useEffect(() => {
-    // Simulate real-time data updates
-    const interval = setInterval(() => {
-      const newData = {
-        time: new Date().toLocaleTimeString(),
-        signal: Math.random() * 100,
-        elevation: Math.random() * 90,
-        azimuth: Math.random() * 360
-      };
-      setSignalData(prev => [...prev.slice(-9), newData]);
-    }, 2000);
-
-    return () => clearInterval(interval);
-  }, []);
 
   const statusCards = [
     {
@@ -59,6 +43,10 @@ const Dashboard = () => {
     }
   ];
 
+  const handleStartTracking = () => {
+    navigate('/tracker');
+  };
+
   return (
     <div className="dashboard">
       <div className="dashboard-header">
@@ -84,37 +72,10 @@ const Dashboard = () => {
         })}
       </div>
 
-      <div className="charts-section">
-        <div className="chart-container">
-          <h3>Signal Strength Over Time</h3>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={signalData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-              <XAxis dataKey="time" stroke="#666" />
-              <YAxis stroke="#666" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1a1a2e', 
-                  border: '1px solid #333',
-                  borderRadius: '8px'
-                }} 
-              />
-              <Line 
-                type="monotone" 
-                dataKey="signal" 
-                stroke="#00d4ff" 
-                strokeWidth={2}
-                dot={{ fill: '#00d4ff', strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
       <div className="quick-actions">
         <h3>Quick Actions</h3>
         <div className="actions-grid">
-          <button className="action-btn primary">
+          <button className="action-btn primary" onClick={handleStartTracking}>
             <Satellite className="btn-icon" />
             Start Tracking
           </button>
