@@ -28,6 +28,30 @@
   font-weight: 300;
 }
 
+.quick-actions {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 3rem;
+}
+
+.quick-actions h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1.5rem 0;
+  color: #e2e8f0;
+  text-align: center;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
 .status-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -131,29 +155,6 @@
   text-align: center;
 }
 
-.quick-actions {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
-.quick-actions h3 {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0 0 1.5rem 0;
-  color: #e2e8f0;
-  text-align: center;
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-
 .action-btn {
   display: flex;
   align-items: center;
@@ -227,6 +228,10 @@
     font-size: 1rem;
   }
   
+  .quick-actions {
+    margin-bottom: 2rem;
+  }
+  
   .status-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -262,6 +267,10 @@
   
   .dashboard-header h2 {
     font-size: 1.75rem;
+  }
+  
+  .quick-actions {
+    margin-bottom: 1.5rem;
   }
   
   .status-card {

@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Satellite, Wifi, TrendingUp } from 'lucide-react';
+import { Activity, Satellite, Wifi, TrendingUp, Image } from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const [systemStatus, setSystemStatus] = useState({
-    antenna: 'Connected',
-    tracking: 'Active',
-    signal: 'Strong',
-    satellites: 12
+    antenna: 'Connected', //Can be connected to function to check if the antenna is connected from the backend
+    tracking: 'Active', //Can be connected to function to check if the tracking is active from the backend
+    signal: 'Strong', //Can be connected to function to check if the signal is strong from the backend
+    satellites: 12 //Can be connected to function to check if the satellites are being tracked from the backend
   });
 
   const statusCards = [
@@ -18,7 +18,7 @@ const Dashboard = () => {
       value: systemStatus.antenna,
       icon: Wifi,
       color: '#00d4ff',
-      status: 'good'
+      status: 'good' 
     },
     {
       title: 'Tracking Status',
@@ -47,11 +47,29 @@ const Dashboard = () => {
     navigate('/tracker');
   };
 
+  const handleViewImages = () => {
+    navigate('/images');
+  };
+
   return (
     <div className="dashboard">
       <div className="dashboard-header">
         <h2>System Dashboard</h2>
         <p>Real-time monitoring of your satellite antenna tracking system</p>
+      </div>
+
+      <div className="quick-actions">
+        <h3>Quick Actions</h3>
+        <div className="actions-grid">
+          <button className="action-btn primary" onClick={handleStartTracking}>
+            <Satellite className="btn-icon" />
+            Start Tracking
+          </button>
+          <button className="action-btn secondary" onClick={handleViewImages}>
+            <Image className="btn-icon" />
+            View Images
+          </button>
+        </div>
       </div>
 
       <div className="status-grid">
@@ -70,24 +88,6 @@ const Dashboard = () => {
             </div>
           );
         })}
-      </div>
-
-      <div className="quick-actions">
-        <h3>Quick Actions</h3>
-        <div className="actions-grid">
-          <button className="action-btn primary" onClick={handleStartTracking}>
-            <Satellite className="btn-icon" />
-            Start Tracking
-          </button>
-          <button className="action-btn secondary">
-            <Activity className="btn-icon" />
-            Calibrate Antenna
-          </button>
-          <button className="action-btn secondary">
-            <Wifi className="btn-icon" />
-            Test Connection
-          </button>
-        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import './SatelliteTracker.css';
 const SatelliteTracker = () => {
   const [satellites, setSatellites] = useState([
     {
+      //Can be connected via API to get the actual data
       id: 1,
       name: 'ISS',
       elevation: 45,
