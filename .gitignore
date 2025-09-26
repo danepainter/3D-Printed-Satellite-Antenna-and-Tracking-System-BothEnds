@@ -1,0 +1,33 @@
+# created by virtualenv automatically
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Compiled Python files
+__pycache__/
+*.pyc
+
+# IDE/Editor specific files
+.idea/
+.vscode/
+*.sublime-project
+*.swp
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# Sensitive configuration files (example)
+config.py
+.env
+
+# Build artifacts
+dist/
+build/
+
+# Test Files
+/TestFunctions/
