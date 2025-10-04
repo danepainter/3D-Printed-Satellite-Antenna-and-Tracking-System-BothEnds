@@ -1,6 +1,6 @@
-from sattracker.satpass import SatPass
-from sattracker.satinterpolation import SatInterpolation
-from sattracker.satserial import SatSerial
+from BackEnd.sattracker.satpass import SatPass
+from BackEnd.sattracker.satinterpolation import SatInterpolation
+from BackEnd.sattracker.satserial import SatSerial
 
 
 def main():
