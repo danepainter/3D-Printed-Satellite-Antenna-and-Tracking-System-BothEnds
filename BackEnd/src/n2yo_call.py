@@ -2,12 +2,13 @@ import sqlite3
 import requests
 import json
 import logging
+import os
 
 #Compiler Directives for DB Connection Needed: For TEST and PROD
 #Establish DB Connection (Should be set for VisualPass or SatellitePos)
 con = sqlite3.connect("visualPass.db")
 api_url = "https://api.n2yo.com/rest/v1/satellite/"
-api_key = "47PJFS-Y3V2DK-H5B8CH-5JF4"
+api_key = os.getenv("N2YO_API_KEY")
 
 # User Input for N2YO API, minimum parameters needed for visual pass or satellite positions
 def user_input():
