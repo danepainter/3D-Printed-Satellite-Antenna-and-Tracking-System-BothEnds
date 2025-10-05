@@ -1,59 +1,132 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Clock, Navigation, Target } from 'lucide-react';
+import { MapPin, Clock, Navigation, Target, Search } from 'lucide-react';
 import './SatelliteTracker.css';
 
 const SatelliteTracker = () => {
-  const [satellites, setSatellites] = useState([
-    {
-      //Can be connected via API to get the actual data
-      id: 1,
-      name: 'ISS',
-      elevation: 45,
-      azimuth: 120,
-      distance: 408,
-      status: 'visible'
-    },
-    {
-      id: 2,
-      name: 'NOAA-18',
-      elevation: 30,
-      azimuth: 200,
-      distance: 850,
-      status: 'visible'
-    },
-    {
-      id: 3,
-      name: 'METEOR-M2',
-      elevation: 15,
-      azimuth: 300,
-      distance: 820,
-      status: 'visible'
-    }
-  ]);
+  // User input state
+  const [observerCoords, setObserverCoords] = useState({
+    latitude: 41.702,
+    longitude: -76.014,
+    altitude: 0
+  });
 
-  const [selectedSatellite, setSelectedSatellite] = useState(satellites[0]);
+  const [searchParams, setSearchParams] = useState({
+    satelliteId: 25544, // Default to ISS
+    days: 2,
+    minVisibility: 300
+  });
+
+  const [satellites, setSatellites] = useState([]);
+  const [visualPasses, setVisualPasses] = useState([]);
+  const [selectedSatellite, setSelectedSatellite] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    // Simulate real-time satellite position updates
-    const interval = setInterval(() => {
-      setSatellites(prev => prev.map(sat => ({
-        ...sat,
-        elevation: Math.max(0, Math.min(90, sat.elevation + (Math.random() - 0.5) * 2)),
-        azimuth: (sat.azimuth + (Math.random() - 0.5) * 4 + 360) % 360
-      })));
-    }, 3000);
+  // Common satellite IDs for dropdown
+  const commonSatellites = [
+    { id: 25544, name: 'International Space Station (ISS)' },
+    { id: 40069, name: 'METEOR-M2' },
+    { id: 43013, name: 'NOAA-20' },
+    { id: 33591, name: 'NOAA-19' },
+    { id: 28654, name: 'NOAA-18' },
+    { id: 25338, name: 'NOAA-15' },
+    { id: 27424, name: 'AQUA' },
+    { id: 25994, name: 'TERRA' },
+    { id: 44387, name: 'METEOR-M2-2' }
+  ];
 
-    return () => clearInterval(interval);
-  }, []);
-
-  // Update selected satellite when satellites array changes
-  useEffect(() => {
-    const updatedSelected = satellites.find(sat => sat.id === selectedSatellite.id);
-    if (updatedSelected) {
-      setSelectedSatellite(updatedSelected);
+  // Function to call backend API
+  const callBackendFunction = async (endpoint, data = {}) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:5000${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data)
+      });
+      
+      const result = await response.json();
+      
+      if (!result.success) {
+        alert(`Error: ${result.error}`);
+      }
+      
+      return result;
+    } catch (error) {
+      alert(`Network error: ${error.message}`);
+      console.error('Error calling backend:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setIsLoading(false);
     }
-  }, [satellites, selectedSatellite.id]);
+  };
+
+  // Fetch visual passes for selected satellite
+  const fetchVisualPasses = async () => {
+    const data = {
+      id: searchParams.satelliteId,
+      observer_lat: observerCoords.latitude,
+      observer_lng: observerCoords.longitude,
+      observer_alt: observerCoords.altitude,
+      days: searchParams.days,
+      min_visibility: searchParams.minVisibility
+    };
+    
+    const result = await callBackendFunction('/satellite/visual-passes', data);
+    
+    if (result?.success) {
+      console.log('Visual passes data:', result.data);
+      setVisualPasses(result.data.passes || []);
+      
+      // Update satellites list with fetched data
+      const satelliteInfo = {
+        id: result.data.info?.satid || searchParams.satelliteId,
+        name: result.data.info?.satname || commonSatellites.find(s => s.id === searchParams.satelliteId)?.name,
+        passes: result.data.passes || [],
+        status: 'visible'
+      };
+      
+      setSatellites([satelliteInfo]);
+      setSelectedSatellite(satelliteInfo);
+      
+      alert(`Found ${result.data.passes?.length || 0} visual passes for ${satelliteInfo.name}`);
+    }
+  };
+
+  const handleStartTracking = async () => {
+    const result = await callBackendFunction('/satellite/start-live');
+    
+    if (result?.success) {
+      setIsTracking(true);
+      if (selectedSatellite) {
+        setSelectedSatellite(prev => ({ ...prev, status: 'tracking' }));
+      }
+      alert(result.message);
+    }
+  };
+
+  const handleStopTracking = () => {
+    setIsTracking(false);
+    if (selectedSatellite) {
+      setSelectedSatellite(prev => ({ ...prev, status: 'visible' }));
+    }
+  };
+
+  const handleStartRecording = async () => {
+    const result = await callBackendFunction('/satellite/start-recording');
+    if (result?.success) {
+      alert(result.message);
+    }
+  };
+
+  const handleProcessOffline = async () => {
+    const result = await callBackendFunction('/satellite/process-offline');
+    if (result?.success) {
+      alert(result.message);
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -64,159 +137,218 @@ const SatelliteTracker = () => {
     }
   };
 
-  const getStatusText = (status) => {
-    switch (status) {
-      case 'tracking': return 'Tracking';
-      case 'visible': return 'Visible';
-      case 'hidden': return 'Hidden';
-      default: return 'Unknown';
-    }
-  };
-
-  const handleStartTracking = () => {
-    setIsTracking(true);
-    setSatellites(prev => prev.map(sat => 
-      sat.id === selectedSatellite.id 
-        ? { ...sat, status: 'tracking' }
-        : sat.status === 'tracking' 
-          ? { ...sat, status: 'visible' }
-          : sat
-    ));
-  };
-
-  const handleStopTracking = () => {
-    setIsTracking(false);
-    setSatellites(prev => prev.map(sat => 
-      sat.id === selectedSatellite.id 
-        ? { ...sat, status: 'visible' }
-        : sat
-    ));
-  };
-
-  const handleSatelliteSelect = (satellite) => {
-    setSelectedSatellite(satellite);
-    // If we're currently tracking a different satellite, stop tracking it
-    if (isTracking && satellite.id !== selectedSatellite.id) {
-      setSatellites(prev => prev.map(sat => 
-        sat.id === selectedSatellite.id 
-          ? { ...sat, status: 'visible' }
-          : sat
-      ));
-    }
+  const formatDateTime = (utcString) => {
+    if (!utcString) return 'N/A';
+    return new Date(utcString * 1000).toLocaleString();
   };
 
   return (
     <div className="satellite-tracker">
       <div className="tracker-header">
         <h2>Satellite Tracker</h2>
-        <p>Real-time satellite positions and tracking information</p>
+        <p>Search and track satellites using real N2YO data</p>
       </div>
 
       <div className="tracker-content">
-        <div className="satellite-list">
-          <h3>Available Satellites</h3>
-          <div className="satellites">
-            {satellites.map(satellite => (
-              <div
-                key={satellite.id}
-                className={`satellite-item ${selectedSatellite.id === satellite.id ? 'selected' : ''}`}
-                onClick={() => handleSatelliteSelect(satellite)}
-              >
-                <div className="satellite-info">
-                  <h4>{satellite.name}</h4>
-                  <div className="satellite-status">
-                    <div 
-                      className="status-indicator"
-                      style={{ backgroundColor: getStatusColor(satellite.status) }}
-                    ></div>
-                    {getStatusText(satellite.status)}
-                  </div>
+        {/* Settings Panel - Always Visible */}
+        <div className="settings-panel">
+          <div className="settings-header">
+            <h3>Search Parameters</h3>
+          </div>
+
+          <div className="settings-content">
+            <div className="input-group">
+              <h4>Observer Location</h4>
+              <div className="coord-inputs">
+                <div className="input-field">
+                  <label>Latitude:</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={observerCoords.latitude}
+                    onChange={(e) => setObserverCoords(prev => ({
+                      ...prev,
+                      latitude: parseFloat(e.target.value) || 0
+                    }))}
+                  />
                 </div>
-                <div className="satellite-position">
-                  <div className="position-item">
-                    <span className="label">Elevation:</span>
-                    <span className="value">{satellite.elevation.toFixed(1)}°</span>
-                  </div>
-                  <div className="position-item">
-                    <span className="label">Azimuth:</span>
-                    <span className="value">{satellite.azimuth.toFixed(1)}°</span>
-                  </div>
+                <div className="input-field">
+                  <label>Longitude:</label>
+                  <input
+                    type="number"
+                    step="0.001"
+                    value={observerCoords.longitude}
+                    onChange={(e) => setObserverCoords(prev => ({
+                      ...prev,
+                      longitude: parseFloat(e.target.value) || 0
+                    }))}
+                  />
+                </div>
+                <div className="input-field">
+                  <label>Altitude (m):</label>
+                  <input
+                    type="number"
+                    value={observerCoords.altitude}
+                    onChange={(e) => setObserverCoords(prev => ({
+                      ...prev,
+                      altitude: parseInt(e.target.value) || 0
+                    }))}
+                  />
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="input-group">
+              <h4>Satellite & Search Options</h4>
+              <div className="search-inputs">
+                <div className="input-field">
+                  <label>Satellite:</label>
+                  <select
+                    value={searchParams.satelliteId}
+                    onChange={(e) => setSearchParams(prev => ({
+                      ...prev,
+                      satelliteId: parseInt(e.target.value)
+                    }))}
+                  >
+                    {commonSatellites.map(sat => (
+                      <option key={sat.id} value={sat.id} className="satellite-select">
+                        {sat.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="input-field">
+                  <label>Days ahead:</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={searchParams.days}
+                    onChange={(e) => setSearchParams(prev => ({
+                      ...prev,
+                      days: parseInt(e.target.value) || 1
+                    }))}
+                  />
+                </div>
+                <div className="input-field">
+                  <label>Min visibility (sec):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={searchParams.minVisibility}
+                    onChange={(e) => setSearchParams(prev => ({
+                      ...prev,
+                      minVisibility: parseInt(e.target.value) || 0
+                    }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <button 
+              className="search-btn primary"
+              onClick={fetchVisualPasses}
+              disabled={isLoading}
+            >
+              <Search size={20} />
+              {isLoading ? 'Searching...' : 'Search Visual Passes'}
+            </button>
           </div>
         </div>
 
-        <div className="tracking-details">
-          <h3>Tracking Details</h3>
-          <div className="details-card">
-            <div className="detail-header">
-              <Target className="detail-icon" />
-              <h4>{selectedSatellite.name}</h4>
-            </div>
-            
-            <div className="detail-grid">
-              <div className="detail-item">
-                <Navigation className="detail-icon" />
-                <div className="detail-content">
-                  <span className="detail-label">Elevation</span>
-                  <span className="detail-value">{selectedSatellite.elevation.toFixed(1)}°</span>
+        {/* Visual Passes Results */}
+        {visualPasses.length > 0 && (
+          <div className="visual-passes">
+            <h3>Visual Passes Found</h3>
+            <div className="passes-list">
+              {visualPasses.map((pass, index) => (
+                <div key={index} className="pass-item">
+                  <div className="pass-header">
+                    <h4>Pass #{index + 1}</h4>
+                    <span className="pass-duration">{pass.duration}s</span>
+                  </div>
+                  <div className="pass-details">
+                    <div className="pass-time">
+                      <strong>Start:</strong> {formatDateTime(pass.startUTC)}
+                    </div>
+                    <div className="pass-time">
+                      <strong>Max Elevation:</strong> {formatDateTime(pass.maxUTC)} ({pass.maxEl}°)
+                    </div>
+                    <div className="pass-time">
+                      <strong>End:</strong> {formatDateTime(pass.endUTC)}
+                    </div>
+                    <div className="pass-magnitude">
+                      <strong>Magnitude:</strong> {pass.mag}
+                    </div>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="detail-item">
-                <MapPin className="detail-icon" />
-                <div className="detail-content">
-                  <span className="detail-label">Azimuth</span>
-                  <span className="detail-value">{selectedSatellite.azimuth.toFixed(1)}°</span>
-                </div>
-              </div>
-              
-              <div className="detail-item">
-                <Clock className="detail-icon" />
-                <div className="detail-content">
-                  <span className="detail-label">Distance</span>
-                  <span className="detail-value">{selectedSatellite.distance} km</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="tracking-controls">
-              <button 
-                className="track-btn primary"
-                onClick={handleStartTracking}
-                disabled={selectedSatellite.status === 'tracking'}
-              >
-                {selectedSatellite.status === 'tracking' ? 'Tracking...' : 'Start Tracking'}
-              </button>
-              <button 
-                className="track-btn secondary"
-                onClick={handleStopTracking}
-                disabled={selectedSatellite.status !== 'tracking'}
-              >
-                Stop Tracking
-              </button>
+              ))}
             </div>
           </div>
+        )}
 
-          <div className="position-visualization">
-            <h4>Antenna Position</h4>
-            <div className="compass">
-              <div className="compass-ring">
-                <div className="compass-needle" style={{
-                  transform: `rotate(${selectedSatellite.azimuth}deg)`
-                }}></div>
-                <div className="compass-center"></div>
+        {/* Selected Satellite Details */}
+        {selectedSatellite && (
+          <div className="tracking-details">
+            <h3>Tracking Controls</h3>
+            <div className="details-card">
+              <div className="detail-header">
+                <Target className="detail-icon" />
+                <h4>{selectedSatellite.name}</h4>
+                <div 
+                  className="status-indicator"
+                  style={{ backgroundColor: getStatusColor(selectedSatellite.status) }}
+                ></div>
               </div>
-              <div className="elevation-indicator">
-                <div className="elevation-bar">
-                  <div 
-                    className="elevation-fill"
-                    style={{ height: `${(selectedSatellite.elevation / 90) * 100}%` }}
-                  ></div>
-                </div>
-                <span className="elevation-label">Elevation</span>
+
+              <div className="tracking-controls">
+                <button 
+                  className="track-btn primary"
+                  onClick={handleStartTracking}
+                  disabled={isTracking || isLoading}
+                >
+                  {isTracking ? 'Tracking...' : 'Start Live Tracking'}
+                </button>
+                
+                <button 
+                  className="track-btn secondary"
+                  onClick={handleStopTracking}
+                  disabled={!isTracking || isLoading}
+                >
+                  Stop Tracking
+                </button>
+
+                <button 
+                  className="track-btn primary"
+                  onClick={handleStartRecording}
+                  disabled={isLoading}
+                >
+                  Start Recording
+                </button>
+
+                <button 
+                  className="track-btn secondary"
+                  onClick={handleProcessOffline}
+                  disabled={isLoading}
+                >
+                  Process Offline Data
+                </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Current Location Display */}
+        <div className="location-info">
+          <h3>Observer Location</h3>
+          <div className="location-details">
+            <div className="location-item">
+              <MapPin className="location-icon" />
+              <span>Lat: {observerCoords.latitude}°, Lng: {observerCoords.longitude}°</span>
+            </div>
+            <div className="location-item">
+              <Clock className="location-icon" />
+              <span>Altitude: {observerCoords.altitude}m</span>
             </div>
           </div>
         </div>
