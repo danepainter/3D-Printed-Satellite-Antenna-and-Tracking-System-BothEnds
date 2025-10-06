@@ -52,7 +52,8 @@ def start_recording():
 @app.route('/satellite/process-offline', methods=['POST'])
 def process_offline():
     try:
-        offline_process()  # Call your Python function
+        offline_process()
+        # Call your Python function
         return jsonify({'success': True, 'message': 'Offline processing completed successfully'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
