@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Satellite, Wifi, TrendingUp, Image } from 'lucide-react';
 import './Dashboard.css';
@@ -6,11 +6,63 @@ import './Dashboard.css';
 const Dashboard = () => {
   const navigate = useNavigate();
   const [systemStatus, setSystemStatus] = useState({
-    antenna: 'Connected', //Can be connected to function to check if the antenna is connected from the backend
-    tracking: 'Active', //Can be connected to function to check if the tracking is active from the backend
-    signal: 'Strong', //Can be connected to function to check if the signal is strong from the backend
-    satellites: 12 //Can be connected to function to check if the satellites are being tracked from the backend
+    antenna: 'Loading...', 
+    tracking: 'Loading...', 
+    signal: 'Loading...', 
+    satellites: 0 
   });
+
+  // Fetch system status from existing backend endpoints
+  useEffect(() => {
+    const fetchSystemStatus = async () => {
+      try {
+        // Check if backend is responding
+        const response = await fetch('http://localhost:5000/');
+        const data = await response.text();
+        
+        // Check if backend is reachable (even if no specific satellite data exists)
+        const backendResponding = response.ok;
+        
+        // Try to get satellite data, but don't fail if it doesn't exist
+        let hasSatelliteData = false;
+        try {
+          const satelliteResponse = await fetch('http://localhost:5000/1');
+          const satelliteData = await satelliteResponse.json();
+          hasSatelliteData = satelliteData.id && !satelliteData.Error;
+        } catch (error) {
+          // Satellite data doesn't exist, but backend is still responding
+          hasSatelliteData = false;
+        }
+        
+        // Set status based on backend availability
+        setSystemStatus({
+          antenna: backendResponding ? 'Connected' : 'Disconnected',
+          tracking: hasSatelliteData ? 'Active' : 'Inactive', 
+          signal: backendResponding ? 'Strong' : 'Weak',
+          satellites: hasSatelliteData ? 1 : 0
+        });
+        
+      } catch (error) {
+        console.error('Error fetching system status:', error);
+        // Set default values if backend is not available
+        setSystemStatus({
+          antenna: 'Disconnected',
+          tracking: 'Inactive',
+          signal: 'Weak', 
+          satellites: 0
+        });
+      }
+    };
+
+    // Fetch immediately
+    fetchSystemStatus();
+
+    // Then fetch every 10 seconds to keep data fresh
+    const interval = setInterval(fetchSystemStatus, 10000);
+
+    // Cleanup interval on component unmount
+    return () => clearInterval(interval);
+  }, []);
 
   const statusCards = [
     {
@@ -18,28 +70,28 @@ const Dashboard = () => {
       value: systemStatus.antenna,
       icon: Wifi,
       color: '#00d4ff',
-      status: 'good' 
+      status: systemStatus.antenna === 'Connected' ? 'good' : 'warning'
     },
     {
-      title: 'Tracking Status',
+      title: 'Tracking Status', 
       value: systemStatus.tracking,
       icon: Satellite,
       color: '#00ff88',
-      status: 'good'
+      status: systemStatus.tracking === 'Active' ? 'good' : 'warning'
     },
     {
       title: 'Signal Strength',
       value: systemStatus.signal,
       icon: Activity,
       color: '#ff6b6b',
-      status: 'good'
+      status: systemStatus.signal === 'Strong' ? 'good' : 'warning'
     },
     {
       title: 'Satellites Tracked',
       value: systemStatus.satellites,
       icon: TrendingUp,
       color: '#ffd93d',
-      status: 'good'
+      status: systemStatus.satellites > 0 ? 'good' : 'warning'
     }
   ];
 
