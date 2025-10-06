@@ -241,10 +241,13 @@
   color: white;
 }
 
+/* Consolidated tracking controls using grid layout for better responsiveness */
 .tracking-controls {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
   justify-content: center;
+  margin-top: 1.5rem;
 }
 
 .track-btn {
@@ -406,6 +409,200 @@
   text-orientation: mixed;
 }
 
+/* Additional styles for enhanced functionality */
+.settings-panel {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 212, 255, 0.2);
+  border: 1px solid #00d4ff;
+  color: #00d4ff;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.settings-toggle:hover {
+  background: rgba(0, 212, 255, 0.3);
+}
+
+.settings-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.input-group h4 {
+  color: #00d4ff;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+}
+
+.coord-inputs, .search-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.input-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.input-field label {
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.input-field input,
+.input-field select {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: 10px;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.input-field input:focus,
+.input-field select:focus {
+  outline: none;
+  border-color: #00d4ff;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.search-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, #00d4ff, #0099cc);
+  border: none;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 10px;
+  align-self: flex-start;
+}
+
+.search-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 212, 255, 0.3);
+}
+
+.search-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.visual-passes {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.passes-list {
+  display: grid;
+  gap: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.pass-item {
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  border-radius: 8px;
+  padding: 15px;
+  transition: all 0.3s ease;
+}
+
+.pass-item:hover {
+  background: rgba(0, 212, 255, 0.15);
+  border-color: #00d4ff;
+}
+
+.pass-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.pass-header h4 {
+  color: #00d4ff;
+  margin: 0;
+}
+
+.pass-duration {
+  background: rgba(0, 255, 136, 0.2);
+  color: #00ff88;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.pass-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  font-size: 0.9rem;
+}
+
+.pass-time, .pass-magnitude {
+  color: #fff;
+}
+
+.location-info {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.location-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.location-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+}
+
+.location-icon {
+  color: #00d4ff;
+  width: 20px;
+  height: 20px;
+}
+
 /* Responsive design */
 @media (max-width: 1024px) {
   .tracker-content {
@@ -448,7 +645,8 @@
   }
   
   .tracking-controls {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
   
   .compass-ring {
@@ -502,4 +700,3 @@
     height: 120px;
   }
 }
-
