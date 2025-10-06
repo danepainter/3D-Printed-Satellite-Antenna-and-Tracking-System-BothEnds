@@ -280,6 +280,18 @@ const SatelliteTracker = () => {
                     <div className="pass-magnitude">
                       <strong>Magnitude:</strong> {pass.mag}
                     </div>
+                    <div className="start-azimuth">
+                      <strong>Starting Azimuth:</strong> {pass.startAz}
+                    </div>
+                    <div className="max-azimuth">
+                      <strong>Maximum Azimuth:</strong> {pass.maxAz}
+                    </div>
+                    <div className="max-elevation">
+                      <strong>Maximum Elevation:</strong> {pass.maxEl}
+                    </div>
+                    <div className="end-azimuth">
+                      <strong>Ending Azimuth:</strong> {pass.endAz}
+                    </div>
                   </div>
                 </div>
               ))}
