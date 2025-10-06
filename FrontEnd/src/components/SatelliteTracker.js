@@ -5,8 +5,8 @@ import './SatelliteTracker.css';
 const SatelliteTracker = () => {
   // User input state
   const [observerCoords, setObserverCoords] = useState({
-    latitude: 41.702,
-    longitude: -76.014,
+    latitude: 26.3737,
+    longitude: 80.1019,
     altitude: 0
   });
 
