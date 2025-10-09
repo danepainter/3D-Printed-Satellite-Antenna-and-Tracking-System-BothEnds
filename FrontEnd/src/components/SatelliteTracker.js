@@ -3,10 +3,6 @@ import { MapPin, Clock, Navigation, Target, Search } from 'lucide-react';
 import './SatelliteTracker.css';
 import SatellitePass3D from './SatellitePass3d';
 
-
-
-
-
 const SatelliteTracker = () => {
   // User input state
   const [observerCoords, setObserverCoords] = useState({
@@ -24,7 +20,6 @@ const SatelliteTracker = () => {
   //3d pass vars 
   const [show3DView, setShow3DView] = useState(false);
   const [selectedPass, setSelectedPass] = useState(null);
-
   const [satellites, setSatellites] = useState([]);
   const [visualPasses, setVisualPasses] = useState([]);
   const [selectedSatellite, setSelectedSatellite] = useState(null);
@@ -40,7 +35,6 @@ const SatelliteTracker = () => {
     setShow3DView(false);
     setSelectedPass(null);
   };
-
   // Common satellite IDs for dropdown
   const commonSatellites = [
     { id: 25544, name: 'International Space Station (ISS)' },
@@ -293,7 +287,6 @@ const SatelliteTracker = () => {
                     >
                       🌍 View 3D Pass
                     </button>
-
                     <div className="pass-time">
                       <strong>Start:</strong> {formatDateTime(pass.startUTC)}
                     </div>
