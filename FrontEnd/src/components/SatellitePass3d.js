@@ -159,7 +159,8 @@ const Scene3D = ({
   observerCoords, 
   isAnimating, 
   animationProgress,
-  onAnimationComplete 
+  onAnimationComplete,
+  onCurrentTimeChange
 }) => {
   const [pathPoints, setPathPoints] = useState([]);
   const [satellitePosition, setSatellitePosition] = useState([0, 0, 0]);
@@ -250,12 +251,17 @@ useEffect(() => {
     const duration = endTime - startTime;
     const currentTime = startTime + (duration * animationProgress);
     setCurrentTime(currentTime);
+
+      // Call the callback to update parent component
+      if (onCurrentTimeChange) {
+        onCurrentTimeChange(currentTime);
+      }
     
     // Check if animation is complete
     if (animationProgress >= 1 && onAnimationComplete) {
       onAnimationComplete();
     }
-  }, [animationProgress, pathPoints, passData, onAnimationComplete]);
+  }, [animationProgress, pathPoints, passData, onAnimationComplete, onCurrentTimeChange]);
 
   // In your Scene3D component, update the return statement (around line 222):
   return (
@@ -290,6 +296,7 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const animationRef = useRef();
+  const [currentTime, setCurrentTime] = useState(0);
 
   const startAnimation = () => {
     if (!passData) return;
@@ -371,7 +378,7 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
             observerCoords={observerCoords}
             isAnimating={isAnimating}
             animationProgress={animationProgress}
-
+            onCurrentTimeChange={setCurrentTime}
             
             />
             
@@ -413,6 +420,20 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
             </div>
             
             <div className="progress-container">
+            <div className="current-time-display">
+              <strong>Current Time:</strong> {(() => {
+                if (!passData) return "0:00";
+                const formatTime = (timestamp) => {
+                  const date = new Date(timestamp * 1000);
+                  return date.toLocaleTimeString([], { 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                  });
+                };
+                return formatTime(currentTime);
+              })()}
+            </div>
               <label>Time: </label>
               <div className="progress-bar">
                 <div 
