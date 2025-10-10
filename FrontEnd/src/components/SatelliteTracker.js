@@ -347,7 +347,7 @@ const SatelliteTracker = () => {
                       onClick={() => handleInterpolatePass(pass)}
                       disabled={isLoading}
                     >
-                      Interpolate Path to Serial
+                      Calculate Path
                     </button>
                   </div>
                 </div>
