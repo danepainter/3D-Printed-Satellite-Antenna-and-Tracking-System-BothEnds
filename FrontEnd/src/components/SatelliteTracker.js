@@ -26,6 +26,10 @@ const SatelliteTracker = () => {
   const [isTracking, setIsTracking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+    // New state for interpolate-pass endpoint
+    const [interpolatedPath, setInterpolatedPath] = useState(null);
+    const [serialAttempt, setSerialAttempt] = useState(null);
+
   //3d pass functions
   const handleView3D = (pass) => {
     setSelectedPass(pass);
@@ -52,7 +56,7 @@ const SatelliteTracker = () => {
   const callBackendFunction = async (endpoint, data = {}) => {
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000${endpoint}`, {
+      const response = await fetch(`http://127.0.0.1:5000${endpoint}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,6 +111,33 @@ const SatelliteTracker = () => {
       alert(`Found ${result.data.passes?.length || 0} visual passes for ${satelliteInfo.name}`);
     }
   };
+
+   // Process a specific pass through sattracker pipeline
+   const handleInterpolatePass = async (pass) => {
+    const passData = {
+      startAz: pass.startAz,
+      startEl: pass.startEl,
+      startUTC: pass.startUTC,
+      maxAz: pass.maxAz,
+      maxEl: pass.maxEl,
+      maxUTC: pass.maxUTC,
+      endAz: pass.endAz,
+      endEl: pass.endEl,
+      endUTC: pass.endUTC
+    };
+    
+    const result = await callBackendFunction('/satellite/interpolate-path', passData);
+    
+    if (result?.success) {
+      setSelectedPass(pass);
+      setInterpolatedPath(result.interpolated_path);
+      setSerialAttempt(result.serial_attempt);
+      console.log('Interpolated path:', result.interpolated_path);
+      console.log('Serial attempt:', result.serial_attempt);
+      alert('Pass processed successfully! Check interpolated path below.');
+    }
+  };
+
 
   const handleStartTracking = async () => {
     const result = await callBackendFunction('/satellite/start-live');
@@ -311,9 +342,55 @@ const SatelliteTracker = () => {
                     <div className="end-azimuth">
                       <strong>Ending Azimuth:</strong> {pass.endAz}
                     </div>
+                    <button 
+                      className="track-btn primary"
+                      onClick={() => handleInterpolatePass(pass)}
+                      disabled={isLoading}
+                    >
+                      Interpolate Path to Serial
+                    </button>
                   </div>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+        {interpolatedPath && (
+          <div className="interpolated-results">
+            <h3>Interpolated Path Results</h3>
+            <div className="interpolation-card">
+              <div className="serial-status">
+                <h4>Serial Connection Status:</h4>
+                <div className={`status-message ${serialAttempt?.includes('Success') ? 'success' : 'failed'}`}>
+                  {serialAttempt || 'No attempt made'}
+                </div>
+              </div>
+              
+              <div className="path-data">
+                <h4>Interpolated Positions ({interpolatedPath.length} points):</h4>
+                <div className="path-table-container">
+                  <table className="path-table">
+                    <thead>
+                      <tr>
+                        <th>#</th>
+                        <th>Azimuth (°)</th>
+                        <th>Elevation (°)</th>
+                        <th>Time (UTC)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {interpolatedPath.map((point, index) => (
+                        <tr key={index}>
+                          <td>{index + 1}</td>
+                          <td>{point[0].toFixed(2)}</td>
+                          <td>{point[1].toFixed(2)}</td>
+                          <td>{formatDateTime(point[2])}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
         )}

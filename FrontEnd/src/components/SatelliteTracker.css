@@ -752,6 +752,39 @@
   }
 }
 
+.interpolated-results {
+  grid-column: 1 / -1;
+}
+
+.status-message.success {
+  color: #00ff88;
+}
+
+.status-message.failed {
+  color: #ff6b6b;
+}
+
+.path-table-container {
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.path-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.path-table th,
+.path-table td {
+  padding: 10px;
+  text-align: left;
+  color: #fff;
+}
+
+.view-3d-btn {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 480px) {
   .satellite-tracker {
     padding: 0.5rem;
