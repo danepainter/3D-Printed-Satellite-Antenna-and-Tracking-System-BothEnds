@@ -292,17 +292,20 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const animationRef = useRef();
 
   const startAnimation = () => {
+    if (!passData) return;
+    
     setIsAnimating(true);
     setIsPlaying(true);
     setAnimationProgress(0);
     
     const startTime = Date.now();
-    const duration = 10000; // 10 seconds animation
+    const passDuration = (passData.endUTC - passData.startUTC); // Already in seconds
+    const animationDuration = Math.min(passDuration * 1000, 15000); // Convert to ms and cap at 15s
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
+      const progress = Math.min(elapsed / animationDuration, 1);
+      console.log('Animation progress:', progress, 'Elapsed:', elapsed, 'Duration:', animationDuration);
       setAnimationProgress(progress);
       
       if (progress < 1) {
@@ -410,16 +413,44 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
             </div>
             
             <div className="progress-container">
-              <label>Animation Progress:</label>
+              <label>Time: </label>
               <div className="progress-bar">
                 <div 
                   className="progress-fill" 
                   style={{ width: `${animationProgress * 100}%` }}
                 />
               </div>
-              <span className="progress-text">
-                {Math.round(animationProgress * 100)}%
-              </span>
+              <div className="progress-times">
+                <span className="start-time">
+                  {(() => {
+                    if (!passData) return "0:00";
+                    const formatTime = (timestamp) => {
+                      const date = new Date(timestamp * 1000);
+                      return date.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit' 
+                      });
+                    };
+                    return formatTime(passData.startUTC);
+                  })()}
+                </span>
+                <span className="end-time">
+                  {(() => {
+                    if (!passData) return "0:00";
+                    const formatTime = (timestamp) => {
+                      const date = new Date(timestamp * 1000);
+                      return date.toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit' 
+                      });
+                    };
+                    return formatTime(passData.endUTC);
+                  })()}
+                </span>
+              </div>
+              
             </div>
           </div>
         </div>

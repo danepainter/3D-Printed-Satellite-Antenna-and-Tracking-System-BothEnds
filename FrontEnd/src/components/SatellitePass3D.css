@@ -154,7 +154,6 @@
   .progress-fill {
     height: 100%;
     background: linear-gradient(90deg, #4A90E2, #7B68EE);
-    transition: width 0.1s ease;
     border-radius: 4px;
   }
   
@@ -233,4 +232,20 @@
   
   .satellite-3d-canvas canvas:active {
     cursor: grabbing;
+  }
+
+  .progress-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #888;
+  }
+  
+  .start-time {
+    text-align: left;
+  }
+  
+  .end-time {
+    text-align: right;
   }
