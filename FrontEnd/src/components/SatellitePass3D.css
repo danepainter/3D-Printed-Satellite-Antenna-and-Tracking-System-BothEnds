@@ -1,0 +1,252 @@
+.satellite-3d-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: 
+      linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a2e 100%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .satellite-3d-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .satellite-3d-header h2 {
+    color: #ffffff;
+    margin: 0;
+    font-size: 1.5rem;
+  }
+  
+  .close-btn {
+    background: #ff4757;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+  }
+  
+  .close-btn:hover {
+    background: #ff3742;
+    transform: scale(1.1);
+  }
+  
+  .satellite-3d-content {
+    display: flex;
+    flex: 1;
+    height: calc(100vh - 80px);
+  }
+  
+  .satellite-3d-canvas {
+    flex: 1;
+    position: relative;
+  }
+  
+  .satellite-3d-controls {
+    width: 350px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    overflow-y: auto;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .pass-info h3,
+  .animation-controls h3 {
+    color: #ffffff;
+    margin: 0 0 1rem 0;
+    font-size: 1.2rem;
+    border-bottom: 2px solid #4A90E2;
+    padding-bottom: 0.5rem;
+  }
+  
+  .info-grid {
+    display: grid;
+    gap: 0.8rem;
+    margin-bottom: 2rem;
+  }
+  
+  .info-item {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    border-left: 3px solid #4A90E2;
+  }
+  
+  .control-buttons {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .control-btn {
+    flex: 1;
+    padding: 0.8rem 1rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  
+  .control-btn.play {
+    background: linear-gradient(135deg, #4CAF50, #45a049);
+    color: white;
+  }
+  
+  .control-btn.stop {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+  }
+  
+  .control-btn.reset {
+    background: linear-gradient(135deg, #ffa726, #ff9800);
+    color: white;
+  }
+  
+  .control-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  .progress-container {
+    margin-top: 1rem;
+  }
+  
+  .progress-container label {
+    color: #e0e0e0;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+  
+  .progress-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+  }
+  
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4A90E2, #7B68EE);
+    border-radius: 4px;
+  }
+  
+  .progress-text {
+    color: #4A90E2;
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+  
+  .no-data {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #e0e0e0;
+    text-align: center;
+  }
+  
+  .no-data h3 {
+    color: #ff6b6b;
+    margin-bottom: 1rem;
+  }
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .satellite-3d-content {
+      flex-direction: column;
+    }
+    
+    .satellite-3d-controls {
+      width: 100%;
+      height: 40vh;
+    }
+    
+    .satellite-3d-canvas {
+      height: 60vh;
+    }
+  }
+
+  .view-3d-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .view-3d-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+
+  .satellite-3d-canvas {
+    flex: 1;
+    position: relative;
+    cursor: grab;
+  }
+  
+  .satellite-3d-canvas:active {
+    cursor: grabbing;
+  }
+  
+  .satellite-3d-canvas canvas {
+    cursor: grab;
+  }
+  
+  .satellite-3d-canvas canvas:active {
+    cursor: grabbing;
+  }
+
+  .progress-times {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #888;
+  }
+  
+  .start-time {
+    text-align: left;
+  }
+  
+  .end-time {
+    text-align: right;
+  }

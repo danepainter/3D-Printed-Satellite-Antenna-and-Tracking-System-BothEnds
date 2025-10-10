@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { MapPin, Clock, Navigation, Target, Search } from 'lucide-react';
 import './SatelliteTracker.css';
+import SatellitePass3D from './SatellitePass3d';
 
 const SatelliteTracker = () => {
   // User input state
@@ -16,12 +17,24 @@ const SatelliteTracker = () => {
     minVisibility: 300
   });
 
+  //3d pass vars 
+  const [show3DView, setShow3DView] = useState(false);
+  const [selectedPass, setSelectedPass] = useState(null);
   const [satellites, setSatellites] = useState([]);
   const [visualPasses, setVisualPasses] = useState([]);
   const [selectedSatellite, setSelectedSatellite] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  //3d pass functions
+  const handleView3D = (pass) => {
+    setSelectedPass(pass);
+    setShow3DView(true);
+  };
+  const handleClose3D = () => {
+    setShow3DView(false);
+    setSelectedPass(null);
+  };
   // Common satellite IDs for dropdown
   const commonSatellites = [
     { id: 25544, name: 'International Space Station (ISS)' },
@@ -268,6 +281,12 @@ const SatelliteTracker = () => {
                     <span className="pass-duration">{pass.duration}s</span>
                   </div>
                   <div className="pass-details">
+                    <button 
+                      className="view-3d-btn"
+                      onClick={() => handleView3D(pass)}
+                    >
+                      🌍 View 3D Pass
+                    </button>
                     <div className="pass-time">
                       <strong>Start:</strong> {formatDateTime(pass.startUTC)}
                     </div>
@@ -365,6 +384,13 @@ const SatelliteTracker = () => {
           </div>
         </div>
       </div>
+      {show3DView && (
+        <SatellitePass3D
+          passData={selectedPass}
+          observerCoords={observerCoords}
+          onClose={handleClose3D}
+        />
+      )}
     </div>
   );
 };
