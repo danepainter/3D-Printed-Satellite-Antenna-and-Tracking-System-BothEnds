@@ -35,13 +35,19 @@ const ErrorBoundary = ({ children }) => {
 
 
 // Convert spherical coordinates (azimuth, elevation) to 3D Cartesian
+// OBSERVER-CENTRIC: positions relative to observer on Earth's surface
 const sphericalToCartesian = (azimuth, elevation, radius = 1.1) => {
-  const phi = (90 - elevation) * (Math.PI / 180); // Convert elevation to phi
-  const theta = (azimuth - 90) * (Math.PI / 180); // Convert azimuth to theta
+  // Convert to radians
+  const azRad = azimuth * (Math.PI / 180);
+  const elRad = elevation * (Math.PI / 180);
   
-  const x = radius * Math.sin(phi) * Math.cos(theta);
-  const y = radius * Math.cos(phi);
-  const z = radius * Math.sin(phi) * Math.sin(theta);
+  // Observer-centric coordinates
+  // X: East-West (positive = East)
+  // Y: Up-Down (positive = Up, elevation angle)
+  // Z: North-South (positive = North)
+  const x = radius * Math.cos(elRad) * Math.sin(azRad);
+  const y = radius * Math.sin(elRad);
+  const z = radius * Math.cos(elRad) * Math.cos(azRad);
   
   return [x, y, z];
 };
@@ -166,7 +172,7 @@ const Scene3D = ({
   const [satellitePosition, setSatellitePosition] = useState([0, 0, 0]);
   const [currentTime, setCurrentTime] = useState(0);
 
-// Convert observer coordinates to 3D position on Earth
+  // Convert observer coordinates to 3D position on Earth
   const observerPosition = useMemo(() => {
     const lat = observerCoords.latitude * (Math.PI / 180);
     const lng = observerCoords.longitude * (Math.PI / 180);
@@ -210,30 +216,28 @@ useEffect(() => {
       const t = i / 100;
       
       try {
-        // Quadratic Bezier interpolation
-        const azimuth = Math.pow(1-t, 2) * startPoint.az + 
-                       2 * (1-t) * t * maxPoint.az + 
-                       Math.pow(t, 2) * endPoint.az;
+        // Linear interpolation
+        const azimuth = startPoint.az + t * (endPoint.az - startPoint.az);
+        const elevation = startPoint.el + t * (endPoint.el - startPoint.el);
         
-        const elevation = Math.pow(1-t, 2) * startPoint.el + 
-                         2 * (1-t) * t * maxPoint.el + 
-                         Math.pow(t, 2) * endPoint.el;
-        
-        // Validate coordinates
+        // Validate coordinates and filter by practical visibility
         if (typeof azimuth === 'number' && typeof elevation === 'number' && 
             !isNaN(azimuth) && !isNaN(elevation) &&
             elevation >= 0 && elevation <= 90) {
           
-          const point = sphericalToCartesian(azimuth, elevation);
+          // Calculate satellite position at appropriate altitude
+          // Use a radius that represents satellite altitude (much higher than Earth surface)
+          const satelliteAltitude = 1.2; // Represents ~200km altitude above Earth
+          const point = sphericalToCartesian(azimuth, elevation, satelliteAltitude);
           points.push(point);
         }
       } catch (error) {
         console.warn('Error generating path point:', error);
       }
     }
-    
+        
     setPathPoints(points);
-  }, [passData]);
+  }, [passData]); // Remove observerPosition from dependencies
     
 
   // Update satellite position during animation
