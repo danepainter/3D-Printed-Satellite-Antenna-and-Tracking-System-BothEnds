@@ -1,145 +1,187 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { OrbitControls, Sphere, Text, Line } from '@react-three/drei';
+import { OrbitControls, Sphere, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import './SatellitePass3D.css';
 
+// Utility functions
+const normalizeAzimuth = (az) => {
+  az = az % 360;
+  if (az < 0) az += 360;
+  return az;
+};
 
+const interpolateAzimuth = (startAz, endAz, t) => {
+  // Convert to radians for proper unwrapping
+  const startRad = startAz * (Math.PI / 180);
+  const endRad = endAz * (Math.PI / 180);
+  
+  // Calculate the shortest angular distance
+  let diff = endRad - startRad;
+  
+  // Normalize to [-π, π] range (shortest path)
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  
+  // Linear interpolation in radians
+  const resultRad = startRad + t * diff;
+  
+  // Convert back to degrees and normalize to [0, 360)
+  const resultDeg = (resultRad * 180 / Math.PI) % 360;
+  const normalized = resultDeg < 0 ? resultDeg + 360 : resultDeg;
+  
+  return normalized;
+};
 
-// Error boundary for 3D components
-const ErrorBoundary = ({ children }) => {
-    const [hasError, setHasError] = useState(false);
-  
-    useEffect(() => {
-      const handleError = (error) => {
-        console.error('3D Component Error:', error);
-        setHasError(true);
-      };
-  
-      window.addEventListener('error', handleError);
-      return () => window.removeEventListener('error', handleError);
-    }, []);
-  
-    if (hasError) {
-      return (
-        <div className="error-fallback">
-          <h3>3D Visualization Error</h3>
-          <p>There was an error rendering the 3D visualization.</p>
-          <button onClick={() => setHasError(false)}>Retry</button>
-        </div>
-      );
-    }
-  
-    return children;
-  };
-
-
-// Convert spherical coordinates (azimuth, elevation) to 3D Cartesian
-// OBSERVER-CENTRIC: positions relative to observer on Earth's surface
 const sphericalToCartesian = (azimuth, elevation, radius = 1.1) => {
-  // Convert to radians
   const azRad = azimuth * (Math.PI / 180);
   const elRad = elevation * (Math.PI / 180);
   
-  // Observer-centric coordinates
-  // X: East-West (positive = East)
-  // Y: Up-Down (positive = Up, elevation angle)
-  // Z: North-South (positive = North)
-  const x = radius * Math.cos(elRad) * Math.sin(azRad);
-  const y = radius * Math.sin(elRad);
-  const z = radius * Math.cos(elRad) * Math.cos(azRad);
+  // Simple coordinate system that keeps satellite on the "front" side
+  // This prevents the "back of sphere" issue by using a different approach
   
-  return [x, y, z];
+  // Use a coordinate system where:
+  // - X: East-West (positive = East)
+  // - Y: Up-Down (positive = Up)
+  // - Z: North-South (positive = North, but constrained to front side)
+  
+  const x = radius * Math.cos(elRad) * Math.sin(azRad);  // East-West
+  const y = radius * Math.sin(elRad);                    // Up-Down
+  const z = radius * Math.cos(elRad) * Math.cos(azRad); // North-South
+  
+  // Force the satellite to stay on the "front" side by constraining Z
+  // If Z would be negative (back side), flip it to positive (front side)
+  const constrainedZ = Math.abs(z);
+  
+  return [x, y, constrainedZ];
 };
 
+const calculateSatellitePosition = (passData, t) => {
+  // Convert t (0-1) to actual time
+  const startTime = passData.startUTC;
+  const endTime = passData.endUTC;
+  const maxTime = passData.maxUTC;
+  const currentTime = startTime + t * (endTime - startTime);
+  
+  // Linear interpolation based on actual time (matching backend)
+  let azimuth, elevation;
+  
+  if (currentTime <= maxTime) {
+    // Interpolate from start to max
+    const timeRatio = (currentTime - startTime) / (maxTime - startTime);
+    azimuth = interpolateAzimuth(passData.startAz, passData.maxAz, timeRatio);
+    elevation = passData.startEl + timeRatio * (passData.maxEl - passData.startEl);
+  } else {
+    // Interpolate from max to end
+    const timeRatio = (currentTime - maxTime) / (endTime - maxTime);
+    azimuth = interpolateAzimuth(passData.maxAz, passData.endAz, timeRatio);
+    elevation = passData.maxEl + timeRatio * (passData.endEl - passData.maxEl);
+  }
+  
+  return { azimuth, elevation };
+};
 
+// Error boundary for 3D components
+const ErrorBoundary = ({ children }) => {
+  const [hasError, setHasError] = useState(false);
 
-// Enhanced Earth component with realistic features
-const Earth = ({ observerPosition }) => {
+  useEffect(() => {
+    const handleError = (error) => {
+      console.error('3D Component Error:', error);
+      setHasError(true);
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
+  }, []);
+
+  if (hasError) {
     return (
+      <div className="error-fallback">
+        <h3>3D Visualization Error</h3>
+        <p>There was an error rendering the 3D visualization.</p>
+        <button onClick={() => setHasError(false)}>Retry</button>
+      </div>
+    );
+  }
+
+  return children;
+};
+
+// Earth component
+const Earth = ({ observerPosition }) => {
+  return (
+    <group>
+      <Sphere args={[1, 64, 64]}>
+        <meshPhongMaterial 
+          color="#4A90E2" 
+          shininess={100}
+          specular="#ffffff"
+        />
+      </Sphere>
+      
+      <mesh position={observerPosition}>
+        <sphereGeometry args={[0.02, 8, 8]} />
+        <meshBasicMaterial color="#ff0000" />
+      </mesh>
+      
       <group>
-        {/* Main Earth sphere with texture */}
-        <Sphere args={[1, 64, 64]}>
-          <meshPhongMaterial 
-            color="#4A90E2" 
-            shininess={100}
-            specular="#ffffff"
-          />
-        </Sphere>
-        
-        {/* Observer position marker */}
-        <mesh position={observerPosition}>
-          <sphereGeometry args={[0.02, 8, 8]} />
-          <meshBasicMaterial color="#ff0000" />
+        <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
+          <torusGeometry args={[1.01, 0.01, 8, 100]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
         </mesh>
         
-        {/* Simple grid lines for position reference */}
-        <group>
-          {/* Equator line */}
-          <mesh position={[0, 0, 0]} rotation={[0, 0, 0]}>
-            <torusGeometry args={[1.01, 0.01, 8, 100]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
-          </mesh>
-          
-          {/* Prime meridian */}
-          <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[1.01, 0.01, 8, 100]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
-          </mesh>
-        </group>
-
-        
-        {/* Day/Night terminator - MOVED OUTSIDE GRID GROUP */}
-        <mesh position={[0, 0, 0]}>
-          <sphereGeometry args={[1.005, 32, 32]} />
-          <meshBasicMaterial 
-            color="#000000" 
-            transparent 
-            opacity={0.3}
-            side={THREE.BackSide}
-          />
+        <mesh position={[0, 0, 0]} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[1.01, 0.01, 8, 100]} />
+          <meshBasicMaterial color="#ffffff" transparent opacity={0.5} />
         </mesh>
       </group>
-    );
-  };
+
+      <mesh position={[0, 0, 0]}>
+        <sphereGeometry args={[1.005, 32, 32]} />
+        <meshBasicMaterial 
+          color="#000000" 
+          transparent 
+          opacity={0.3}
+          side={THREE.BackSide}
+        />
+      </mesh>
+    </group>
+  );
+};
 
 // Satellite trajectory line
-// Satellite trajectory line
 const SatellitePath = ({ pathPoints }) => {
-    const points = useMemo(() => {
-      // Validate pathPoints before processing
-      if (!pathPoints || pathPoints.length === 0) {
-        return [];
-      }
-      
-      // Filter out invalid points and ensure they have 3 coordinates
-      const validPoints = pathPoints.filter(point => 
-        Array.isArray(point) && 
-        point.length === 3 && 
-        point.every(coord => typeof coord === 'number' && !isNaN(coord))
-      );
-      
-      // Return empty array if no valid points
-      if (validPoints.length === 0) {
-        return [];
-      }
-      
-      return validPoints.map(point => new THREE.Vector3(...point));
-    }, [pathPoints]);
-  
-    // Don't render if no valid points
-    if (points.length === 0) {
-      return null;
+  const points = useMemo(() => {
+    if (!pathPoints || pathPoints.length === 0) {
+      return [];
     }
-  
-    return (
-      <Line
-        points={points}
-        color="#ffff00"
-        lineWidth={3}
-      />
+    
+    const validPoints = pathPoints.filter(point => 
+      Array.isArray(point) && 
+      point.length === 3 && 
+      point.every(coord => typeof coord === 'number' && !isNaN(coord))
     );
-  };
+    
+    if (validPoints.length === 0) {
+      return [];
+    }
+    
+    return validPoints.map(point => new THREE.Vector3(...point));
+  }, [pathPoints]);
+
+  if (points.length === 0) {
+    return null;
+  }
+
+  return (
+    <Line
+      points={points}
+      color="#ff0000"
+      lineWidth={5}
+    />
+  );
+};
 
 // Animated satellite
 const Satellite = ({ position, isAnimating }) => {
@@ -170,104 +212,85 @@ const Scene3D = ({
 }) => {
   const [pathPoints, setPathPoints] = useState([]);
   const [satellitePosition, setSatellitePosition] = useState([0, 0, 0]);
-  const [currentTime, setCurrentTime] = useState(0);
 
   // Convert observer coordinates to 3D position on Earth
   const observerPosition = useMemo(() => {
     const lat = observerCoords.latitude * (Math.PI / 180);
     const lng = observerCoords.longitude * (Math.PI / 180);
-    const radius = 1.01; // Slightly above Earth surface
+    const radius = 1.01;
     
-    // More accurate spherical to Cartesian conversion
     return [
-      radius * Math.cos(lat) * Math.cos(lng), //X cord
-      radius * Math.sin(lat), //Y cord
-      radius * Math.cos(lat) * Math.sin(lng) //Z cord
+      radius * Math.cos(lat) * Math.cos(lng),
+      radius * Math.sin(lat),
+      radius * Math.cos(lat) * Math.sin(lng)
     ];
   }, [observerCoords]);
-    
-   
 
-  // Generate satellite path points with Bezier curve
-useEffect(() => {
-    if (!passData) {
+  // Generate satellite path points
+  useEffect(() => {
+    if (!passData || !passData.startUTC || !passData.endUTC) {
       setPathPoints([]);
       return;
     }
-  
+
+    if (pathPoints.length > 0) {
+      return;
+    }
+
     const points = [];
     const startTime = passData.startUTC;
     const endTime = passData.endUTC;
+    const maxTime = passData.maxUTC;
     const duration = endTime - startTime;
     
-    // Validate time data
-    if (!startTime || !endTime || duration <= 0) {
+    if (duration <= 0) {
       setPathPoints([]);
       return;
     }
     
-    // Create control points for Bezier curve
-    const startPoint = { az: passData.startAz, el: passData.startEl };
-    const maxPoint = { az: passData.maxAz, el: passData.maxEl };
-    const endPoint = { az: passData.endAz, el: passData.endEl };
-    
-    // Generate points along the trajectory
+    // Generate points with time-based interpolation (matching backend)
     for (let i = 0; i <= 100; i++) {
       const t = i / 100;
       
       try {
-        // Linear interpolation
-        const azimuth = startPoint.az + t * (endPoint.az - startPoint.az);
-        const elevation = startPoint.el + t * (endPoint.el - startPoint.el);
-        
-        // Validate coordinates and filter by practical visibility
-        if (typeof azimuth === 'number' && typeof elevation === 'number' && 
-            !isNaN(azimuth) && !isNaN(elevation) &&
-            elevation >= 0 && elevation <= 90) {
-          
-          // Calculate satellite position at appropriate altitude
-          // Use a radius that represents satellite altitude (much higher than Earth surface)
-          const satelliteAltitude = 1.2; // Represents ~200km altitude above Earth
-          const point = sphericalToCartesian(azimuth, elevation, satelliteAltitude);
-          points.push(point);
-        }
+        const { azimuth, elevation } = calculateSatellitePosition(passData, t);
+        const satelliteAltitude = 1.2;
+        const point = sphericalToCartesian(azimuth, elevation, satelliteAltitude);
+        points.push(point);
       } catch (error) {
-        console.warn('Error generating path point:', error);
+        console.warn('Error generating satellite path point:', error);
       }
     }
-        
+      
     setPathPoints(points);
-  }, [passData]); // Remove observerPosition from dependencies
-    
+  }, [passData, pathPoints.length]);
 
   // Update satellite position during animation
   useEffect(() => {
     if (!passData || pathPoints.length === 0) return;
 
-    const pointIndex = Math.floor(animationProgress * (pathPoints.length - 1));
-    const clampedIndex = Math.min(pointIndex, pathPoints.length - 1);
+    const t = animationProgress;
+    const { azimuth, elevation } = calculateSatellitePosition(passData, t);
     
-    setSatellitePosition(pathPoints[clampedIndex]);
+    const satelliteAltitude = 1.2;
+    const satellitePos = sphericalToCartesian(azimuth, elevation, satelliteAltitude);
+    setSatellitePosition(satellitePos);
     
     // Calculate current time
     const startTime = passData.startUTC;
     const endTime = passData.endUTC;
     const duration = endTime - startTime;
     const currentTime = startTime + (duration * animationProgress);
-    setCurrentTime(currentTime);
 
-      // Call the callback to update parent component
-      if (onCurrentTimeChange) {
-        onCurrentTimeChange(currentTime);
-      }
-    
-    // Check if animation is complete
+    if (onCurrentTimeChange) {
+      onCurrentTimeChange(currentTime);
+    }
+
     if (animationProgress >= 1 && onAnimationComplete) {
       onAnimationComplete();
     }
   }, [animationProgress, pathPoints, passData, onAnimationComplete, onCurrentTimeChange]);
 
-  // In your Scene3D component, update the return statement (around line 222):
   return (
     <>
       <ambientLight intensity={0.4} />
@@ -277,30 +300,38 @@ useEffect(() => {
       <SatellitePath pathPoints={pathPoints} />
       <Satellite position={satellitePosition} isAnimating={isAnimating} />
 
-        {/* Add OrbitControls for manual rotation */}
-        <OrbitControls 
-            enablePan={true} 
-            enableZoom={true} 
-            enableRotate={true}
-            enableDamping={true}
-            dampingFactor={0.05}
-            minPolarAngle={0}
-            maxPolarAngle={Math.PI}
-            minAzimuthAngle={-Infinity}
-            maxAzimuthAngle={Infinity}
-        />
+      <OrbitControls 
+        enablePan={true} 
+        enableZoom={true} 
+        enableRotate={true}
+        enableDamping={true}
+        dampingFactor={0.05}
+        minPolarAngle={0}
+        maxPolarAngle={Math.PI}
+        minAzimuthAngle={-Infinity}
+        maxAzimuthAngle={Infinity}
+      />
     </>
   );
 };
 
+// Time formatting utility
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp * 1000);
+  return date.toLocaleTimeString([], { 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  });
+};
 
 // Main component
 const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const animationRef = useRef();
   const [currentTime, setCurrentTime] = useState(0);
+  const animationRef = useRef();
 
   const startAnimation = () => {
     if (!passData) return;
@@ -310,13 +341,12 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
     setAnimationProgress(0);
     
     const startTime = Date.now();
-    const passDuration = (passData.endUTC - passData.startUTC); // Already in seconds
-    const animationDuration = Math.min(passDuration * 1000, 15000); // Convert to ms and cap at 15s
+    const passDuration = (passData.endUTC - passData.startUTC);
+    const animationDuration = Math.min(passDuration * 1000, 15000);
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / animationDuration, 1);
-      console.log('Animation progress:', progress, 'Elapsed:', elapsed, 'Duration:', animationDuration);
       setAnimationProgress(progress);
       
       if (progress < 1) {
@@ -341,10 +371,6 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const resetAnimation = () => {
     stopAnimation();
     setAnimationProgress(0);
-  };
-
-  const formatTime = (timestamp) => {
-    return new Date(timestamp * 1000).toLocaleTimeString();
   };
 
   useEffect(() => {
@@ -375,19 +401,21 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
       
       <div className="satellite-3d-content">
         <div className="satellite-3d-canvas">
-        <ErrorBoundary>
-        <Canvas camera={{ position: [3, 3, 3], fov: 60 }}>
-            <Scene3D 
-            passData={passData}
-            observerCoords={observerCoords}
-            isAnimating={isAnimating}
-            animationProgress={animationProgress}
-            onCurrentTimeChange={setCurrentTime}
-            
-            />
-            
-        </Canvas>
-        </ErrorBoundary>
+          <ErrorBoundary>
+            <Canvas camera={{ position: [3, 3, 3], fov: 60 }}>
+              <Scene3D 
+                passData={passData}
+                observerCoords={observerCoords}
+                isAnimating={isAnimating}
+                animationProgress={animationProgress}
+                onCurrentTimeChange={setCurrentTime}
+                onAnimationComplete={() => {
+                  setIsAnimating(false);
+                  setIsPlaying(false);
+                }}
+              />
+            </Canvas>
+          </ErrorBoundary>
         </div>
         
         <div className="satellite-3d-controls">
@@ -424,20 +452,9 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
             </div>
             
             <div className="progress-container">
-            <div className="current-time-display">
-              <strong>Current Time:</strong> {(() => {
-                if (!passData) return "0:00";
-                const formatTime = (timestamp) => {
-                  const date = new Date(timestamp * 1000);
-                  return date.toLocaleTimeString([], { 
-                    hour: '2-digit', 
-                    minute: '2-digit', 
-                    second: '2-digit' 
-                  });
-                };
-                return formatTime(currentTime);
-              })()}
-            </div>
+              <div className="current-time-display">
+                <strong>Current Time:</strong> {formatTime(currentTime)}
+              </div>
               <label>Time: </label>
               <div className="progress-bar">
                 <div 
@@ -447,35 +464,12 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
               </div>
               <div className="progress-times">
                 <span className="start-time">
-                  {(() => {
-                    if (!passData) return "0:00";
-                    const formatTime = (timestamp) => {
-                      const date = new Date(timestamp * 1000);
-                      return date.toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        second: '2-digit' 
-                      });
-                    };
-                    return formatTime(passData.startUTC);
-                  })()}
+                  {formatTime(passData.startUTC)}
                 </span>
                 <span className="end-time">
-                  {(() => {
-                    if (!passData) return "0:00";
-                    const formatTime = (timestamp) => {
-                      const date = new Date(timestamp * 1000);
-                      return date.toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit', 
-                        second: '2-digit' 
-                      });
-                    };
-                    return formatTime(passData.endUTC);
-                  })()}
+                  {formatTime(passData.endUTC)}
                 </span>
               </div>
-              
             </div>
           </div>
         </div>
