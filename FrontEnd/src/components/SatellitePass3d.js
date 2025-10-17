@@ -57,26 +57,16 @@ const sphericalToCartesian = (azimuth, elevation, radius = 1.1) => {
 };
 
 const calculateSatellitePosition = (passData, t) => {
-  // Convert t (0-1) to actual time
-  const startTime = passData.startUTC;
-  const endTime = passData.endUTC;
+  // Only show the descent portion (from max elevation to end)
+  // Convert t (0-1) to time between max and end
   const maxTime = passData.maxUTC;
-  const currentTime = startTime + t * (endTime - startTime);
+  const endTime = passData.endUTC;
+  const currentTime = maxTime + t * (endTime - maxTime);
   
-  // Linear interpolation based on actual time (matching backend)
-  let azimuth, elevation;
-  
-  if (currentTime <= maxTime) {
-    // Interpolate from start to max
-    const timeRatio = (currentTime - startTime) / (maxTime - startTime);
-    azimuth = interpolateAzimuth(passData.startAz, passData.maxAz, timeRatio);
-    elevation = passData.startEl + timeRatio * (passData.maxEl - passData.startEl);
-  } else {
-    // Interpolate from max to end
-    const timeRatio = (currentTime - maxTime) / (endTime - maxTime);
-    azimuth = interpolateAzimuth(passData.maxAz, passData.endAz, timeRatio);
-    elevation = passData.maxEl + timeRatio * (passData.endEl - passData.maxEl);
-  }
+  // Only interpolate from max to end (descent portion)
+  const timeRatio = (currentTime - maxTime) / (endTime - maxTime);
+  const azimuth = interpolateAzimuth(passData.maxAz, passData.endAz, timeRatio);
+  const elevation = passData.maxEl + timeRatio * (passData.endEl - passData.maxEl);
   
   return { azimuth, elevation };
 };
@@ -238,17 +228,16 @@ const Scene3D = ({
     }
 
     const points = [];
-    const startTime = passData.startUTC;
-    const endTime = passData.endUTC;
     const maxTime = passData.maxUTC;
-    const duration = endTime - startTime;
+    const endTime = passData.endUTC;
+    const duration = endTime - maxTime; // Only descent duration
     
     if (duration <= 0) {
       setPathPoints([]);
       return;
     }
     
-    // Generate points with time-based interpolation (matching backend)
+    // Generate points for descent portion only (from max to end)
     for (let i = 0; i <= 100; i++) {
       const t = i / 100;
       
@@ -276,11 +265,11 @@ const Scene3D = ({
     const satellitePos = sphericalToCartesian(azimuth, elevation, satelliteAltitude);
     setSatellitePosition(satellitePos);
     
-    // Calculate current time
-    const startTime = passData.startUTC;
+    // Calculate current time (descent portion only)
+    const maxTime = passData.maxUTC;
     const endTime = passData.endUTC;
-    const duration = endTime - startTime;
-    const currentTime = startTime + (duration * animationProgress);
+    const duration = endTime - maxTime;
+    const currentTime = maxTime + (duration * animationProgress);
 
     if (onCurrentTimeChange) {
       onCurrentTimeChange(currentTime);
@@ -341,8 +330,8 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
     setAnimationProgress(0);
     
     const startTime = Date.now();
-    const passDuration = (passData.endUTC - passData.startUTC);
-    const animationDuration = Math.min(passDuration * 1000, 15000);
+    const descentDuration = (passData.endUTC - passData.maxUTC); // Only descent duration
+    const animationDuration = Math.min(descentDuration * 1000, 15000);
     
     const animate = () => {
       const elapsed = Date.now() - startTime;
@@ -464,7 +453,7 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
               </div>
               <div className="progress-times">
                 <span className="start-time">
-                  {formatTime(passData.startUTC)}
+                  {formatTime(passData.maxUTC)}
                 </span>
                 <span className="end-time">
                   {formatTime(passData.endUTC)}
