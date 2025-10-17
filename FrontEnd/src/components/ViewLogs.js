@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { FileText, Download, Eye, Calendar, Satellite, Clock, MapPin, Activity } from 'lucide-react';
-import './ViewImages.css';
+import './ViewLogs.css';
 
 const ViewTrackLogs = () => {
   const [selectedLog, setSelectedLog] = useState(null);

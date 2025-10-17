@@ -99,8 +99,8 @@ const Dashboard = () => {
     navigate('/tracker');
   };
 
-  const handleViewImages = () => {
-    navigate('/images');
+  const handleViewLogs = () => {
+    navigate('/logs');
   };
 
   return (
@@ -117,9 +117,9 @@ const Dashboard = () => {
             <Satellite className="btn-icon" />
             Start Tracking
           </button>
-          <button className="action-btn secondary" onClick={handleViewImages}>
+          <button className="action-btn secondary" onClick={handleViewLogs}>
             <Image className="btn-icon" />
-            View Images
+            View Logs
           </button>
         </div>
       </div>
