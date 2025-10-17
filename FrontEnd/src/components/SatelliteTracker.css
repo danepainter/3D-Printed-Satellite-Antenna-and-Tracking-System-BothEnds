@@ -752,33 +752,353 @@
   }
 }
 
+/* Enhanced Interpolated Path Results */
 .interpolated-results {
   grid-column: 1 / -1;
+  margin-top: 2rem;
+}
+
+.interpolation-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.results-header {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.serial-status h4 {
+  color: #00d4ff;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.status-message {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .status-message.success {
-  color: #00ff88;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .status-message.failed {
-  color: #ff6b6b;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-icon {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.path-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(0, 212, 255, 0.1);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin-bottom: 0.25rem;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #00d4ff;
+}
+
+.path-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.path-header h4 {
+  color: #e2e8f0;
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.path-controls {
+  display: flex;
+  gap: 1rem;
+}
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
 }
 
 .path-table-container {
-  max-height: 400px;
+  max-height: 500px;
   overflow-y: auto;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .path-table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  table-layout: fixed;
 }
 
-.path-table th,
-.path-table td {
-  padding: 10px;
+.path-table th {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  font-weight: 600;
+  padding: 0.75rem 0.75rem;
   text-align: left;
-  color: #fff;
+  border-bottom: 2px solid rgba(0, 212, 255, 0.2);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Header Column 1: Point Number - Centered */
+.path-table th:nth-child(1) { 
+  width: 10%; 
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+}   
+
+/* Header Column 2: Azimuth - Left aligned */
+.path-table th:nth-child(2) { 
+  width: 25%; 
+  text-align: left;
+  padding: 0.75rem 0.75rem;
+}  
+
+/* Header Column 3: Elevation - Left aligned */
+.path-table th:nth-child(3) { 
+  width: 30%; 
+  text-align: left;
+  padding: 0.75rem 0.75rem;
+}  
+
+/* Header Column 4: Time - Left aligned */
+.path-table th:nth-child(4) { 
+  width: 25%; 
+  text-align: left;
+  padding: 0.75rem 0.75rem;
+} 
+
+/* Header Column 5: Duration - Centered */
+.path-table th:nth-child(5) { 
+  width: 10%; 
+  text-align: center;
+  padding: 0.75rem 0.5rem;
+}
+
+.path-table td {
+  padding: 0.5rem 0.75rem;
+  color: #e2e8f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+  word-wrap: break-word;
+  overflow: hidden;
+  height: auto;
+}
+
+/* Column 1: Point Number - Centered */
+.path-table td:nth-child(1) { 
+  text-align: center;
+  padding: 0.5rem 0.5rem;
+  width: 10%;
+}   
+
+/* Column 2: Azimuth - Left aligned */
+.path-table td:nth-child(2) { 
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  width: 25%;
+}  
+
+/* Column 3: Elevation - Left aligned */
+.path-table td:nth-child(3) { 
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  width: 30%;
+}  
+
+/* Column 4: Time - Left aligned */
+.path-table td:nth-child(4) { 
+  text-align: left;
+  padding: 0.5rem 0.75rem;
+  width: 25%;
+} 
+
+/* Column 5: Duration - Centered */
+.path-table td:nth-child(5) { 
+  text-align: center;
+  padding: 0.5rem 0.5rem;
+  width: 10%;
+}
+
+.path-table tr.even-row {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.path-table tr.odd-row {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.path-table tr:hover {
+  background: rgba(0, 212, 255, 0.1);
+}
+
+.point-number {
+  font-weight: 600;
+  color: #00d4ff;
+  text-align: center;
+  width: 100%;
+}
+
+.azimuth-value {
+  display: block;
+  width: 100%;
+}
+
+.azimuth-value .value {
+  font-weight: 600;
+  font-size: 1rem;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.azimuth-value .direction {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+  display: block;
+}
+
+.elevation-value {
+  display: block;
+  width: 100%;
+}
+
+.elevation-value .value {
+  font-weight: 600;
+  font-size: 1rem;
+  display: inline-block;
+  margin-right: 1rem;
+}
+
+.elevation-bar {
+  display: inline-block;
+  vertical-align: middle;
+  width: 20px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.elevation-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(180deg, #00ff88 0%, #00d4ff 100%);
+  border-radius: 10px;
+  transition: height 0.3s ease;
+  box-shadow: 0 0 8px rgba(0, 255, 136, 0.3);
+}
+
+.time-value {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #94a3b8;
+  width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.duration-value {
+  font-weight: 600;
+  color: #00d4ff;
+  text-align: center;
+  width: 100%;
+}
+
+/* Scrollbar styling for table container */
+.path-table-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.path-table-container::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+
+.path-table-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 212, 255, 0.5);
+  border-radius: 4px;
+}
+
+.path-table-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 212, 255, 0.7);
 }
 
 .view-3d-btn {
@@ -820,6 +1140,67 @@
   
   .elevation-bar {
     height: 120px;
+  }
+  
+  /* Enhanced responsive design for interpolated results */
+  .results-header {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .summary-stats {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+  
+  .stat-item {
+    padding: 0.75rem 0.5rem;
+  }
+  
+  .stat-value {
+    font-size: 1.25rem;
+  }
+  
+  .path-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  
+  .path-controls {
+    justify-content: center;
+  }
+  
+  .path-table-container {
+    max-height: 300px;
+  }
+  
+  .path-table {
+    font-size: 0.8rem;
+  }
+  
+  .path-table th,
+  .path-table td {
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .elevation-value {
+    gap: 0.5rem;
+    min-width: 120px;
+  }
+  
+  .elevation-bar {
+    width: 16px;
+    height: 30px;
+  }
+  
+  .azimuth-value {
+    min-width: 100px;
+  }
+  
+  .time-value {
+    font-size: 0.75rem;
+    min-width: 120px;
   }
 }
 
