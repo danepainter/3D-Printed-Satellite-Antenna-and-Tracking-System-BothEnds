@@ -185,7 +185,7 @@ const Satellite = ({ position, isAnimating }) => {
 
   return (
     <mesh ref={meshRef} position={position}>
-      <boxGeometry args={[0.05, 0.05, 0.05]} />
+      <boxGeometry args={[0.075, 0.075, 0.075]} />
       <meshBasicMaterial color="#ffffff" />
     </mesh>
   );
@@ -319,22 +319,37 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [animationProgress, setAnimationProgress] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const animationRef = useRef();
+  const animationStartTimeRef = useRef(0);
+  const elapsedTimeRef = useRef(0);
 
   const startAnimation = () => {
     if (!passData) return;
     
     setIsAnimating(true);
     setIsPlaying(true);
-    setAnimationProgress(0);
+    setIsPaused(false);
     
-    const startTime = Date.now();
-    const descentDuration = (passData.endUTC - passData.maxUTC); // Only descent duration
+    const descentDuration = (passData.endUTC - passData.maxUTC);
     const animationDuration = Math.min(descentDuration * 1000, 15000);
     
+    // If resuming from pause, use elapsed time
+    if (isPaused) {
+      // Resume from current progress using elapsed time
+      animationStartTimeRef.current = Date.now() - elapsedTimeRef.current;
+    } else {
+      // Starting fresh
+      setAnimationProgress(0);
+      elapsedTimeRef.current = 0;
+      animationStartTimeRef.current = Date.now();
+    }
+    
     const animate = () => {
-      const elapsed = Date.now() - startTime;
+      const currentTime = Date.now();
+      const elapsed = currentTime - animationStartTimeRef.current;
+      elapsedTimeRef.current = elapsed;
       const progress = Math.min(elapsed / animationDuration, 1);
       setAnimationProgress(progress);
       
@@ -352,6 +367,7 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const stopAnimation = () => {
     setIsAnimating(false);
     setIsPlaying(false);
+    setIsPaused(true);
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
     }
@@ -360,6 +376,8 @@ const SatellitePass3D = ({ passData, observerCoords, onClose }) => {
   const resetAnimation = () => {
     stopAnimation();
     setAnimationProgress(0);
+    setIsPaused(false);
+    elapsedTimeRef.current = 0;
   };
 
   useEffect(() => {
