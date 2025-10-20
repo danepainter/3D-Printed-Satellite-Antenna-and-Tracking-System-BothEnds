@@ -4,7 +4,7 @@ import './App.css';
 import Header from './components/Header';
 import Dashboard from './components/Dashboard';
 import SatelliteTracker from './components/SatelliteTracker';
-import ViewImages from './components/ViewImages';
+import ViewLogs from './components/ViewLogs';
 
 function App() {
   return (
@@ -15,7 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/tracker" element={<SatelliteTracker />} />
-            <Route path="/images" element={<ViewImages />} />
+            <Route path="/logs" element={<ViewLogs />} />
           </Routes>
         </main>
       </div>

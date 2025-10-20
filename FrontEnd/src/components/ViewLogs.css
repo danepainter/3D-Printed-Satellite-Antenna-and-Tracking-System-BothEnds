@@ -363,6 +363,27 @@
   font-weight: 500;
 }
 
+/* Status indicators */
+.status-completed {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.status-failed {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.status-in-progress {
+  color: #f59e0b;
+  font-weight: 600;
+}
+
+.status-pending {
+  color: #6b7280;
+  font-weight: 600;
+}
+
 .modal-footer {
   padding: 1.5rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
