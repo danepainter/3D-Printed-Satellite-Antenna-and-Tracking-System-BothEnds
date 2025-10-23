@@ -74,7 +74,7 @@ def get_visual_passes():
         observer_alt = data.get('observer_alt', 0)
         days = data.get('days', 2)
         min_visibility = data.get('min_visibility', 300)
-        api_key = data.get('api_key', '47PJFS-Y3V2DK-H5B8CH-5JF4')
+        api_key = data.get('api_key', '')
         
         # Call your Python function
         result = fetch_visualPasses(sat_id, observer_lat, observer_lng, observer_alt, days, min_visibility, api_key)
