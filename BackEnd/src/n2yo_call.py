@@ -6,7 +6,7 @@ import json
 #Establish DB Connection (Should be set for VisualPass or SatellitePos)
 con = sqlite3.connect("visualPass.db")
 api_url = "https://api.n2yo.com/rest/v1/satellite/"
-api_key = "47PJFS-Y3V2DK-H5B8CH-5JF4"
+api_key = ""
 
 # User Input for N2YO API, minimum parameters needed for visual pass or satellite positions
 def user_input():
@@ -17,7 +17,7 @@ def user_input():
     days = int(input("Enter the number of days: "))
     min_visibility = int(input("Enter the minimum visibility: "))
     api_key = input("Enter the API key: ")
-    return id, observer_lat, observer_lng, observer_alt, days, min_visibility, api_key
+    return id, observer_lat, observer_lng, observer_alt, days, min_visibility, api_key# API License Key:
 
 def fetch_visualPasses(id, observer_lat, observer_lng, observer_alt, days, min_visibility, api_key):
     response = requests.get(f"{api_url}/visualpasses/{id}/{observer_lat}/{observer_lng}/{observer_alt}/{days}/{min_visibility}/&apiKey={api_key}")
@@ -108,10 +108,8 @@ def write_to_visualPass_db(json_data):
 
 # Example - retrieve Space Station (25544) passes optically visible at least 300 seconds for next 2 days. Observer is located at lat: 41.702, lng: -76.014, alt: 0
 # Request: /visualpasses/{id}/{observer_lat}/{observer_lng}/{observer_alt}/{days}/{min_visibility} 
-# Visual Pass: https://api.n2yo.com/rest/v1/satellite/visualpasses/25544/41.702/-76.014/0/2/300/&apiKey=589P8Q-SDRYX8-L842ZD-5Z9
+# Visual Pass: https://api.n2yo.com/rest/v1/satellite/visualpasses/25544/41.702/-76.014/0/2/300/&apiKey=
 
 # Example - retrieve Space Station (25544) positions for next 2 seconds. Observer is located at lat: 41.702, lng: -76.014, alt: 0
 # Request: /positions/{id}/{observer_lat}/{observer_lng}/{observer_alt}/{seconds}
-# Satellite Positions: https://api.n2yo.com/rest/v1/satellite/positions/25544/41.702/-76.014/0/2/&apiKey=589P8Q-SDRYX8-L842ZD-5Z9
-
-# API License Key: 47PJFS-Y3V2DK-H5B8CH-5JF4
+# Satellite Positions: https://api.n2yo.com/rest/v1/satellite/positions/25544/41.702/-76.014/0/2/&apiKey=
