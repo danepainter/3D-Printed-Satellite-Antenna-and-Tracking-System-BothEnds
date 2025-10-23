@@ -2,6 +2,7 @@
 #FLASK APP FILE, CREATE THE FLASK APP AND THE ROUTES
 
 from flask import Flask, jsonify, request
+import os
 from flask_cors import CORS
 from config import Config
 from database import db, init_db
@@ -13,8 +14,9 @@ from sattracker.satinterpolation import SatInterpolation
 from sattracker.satserial import SatSerial
 import threading
 from datetime import datetime
+from dotenv import load_dotenv
 
-
+load_dotenv
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -85,7 +87,7 @@ def get_visual_passes():
         # observer_alt = data.get('observer_alt', 0)
         # days = data.get('days', 2)
         # min_visibility = data.get('min_visibility', 300)
-        # api_key = data.get('api_key', '47PJFS-Y3V2DK-H5B8CH-5JF4')
+
 
         # Validate required parameters
         required_params = ['id', 'observer_lat', 'observer_lng', 'observer_alt', 'days', 'min_visibility']
@@ -104,7 +106,7 @@ def get_visual_passes():
         observer_alt = data['observer_alt']
         days = data['days']
         min_visibility = data['min_visibility']
-        api_key = data.get('api_key', '47PJFS-Y3V2DK-H5B8CH-5JF4')
+        api_key = data.get('api_key', os.getenv("API_KEY"))
         
         # Fetch visual passes from N2YO API
         json_data = fetch_visualPasses(sat_id, observer_lat, observer_lng, observer_alt, days, min_visibility, api_key)
