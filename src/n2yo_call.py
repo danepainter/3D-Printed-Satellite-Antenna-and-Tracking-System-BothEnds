@@ -7,7 +7,7 @@ import logging
 #Establish DB Connection (Should be set for VisualPass or SatellitePos)
 con = sqlite3.connect("visualPass.db")
 api_url = "https://api.n2yo.com/rest/v1/satellite/"
-api_key = "47PJFS-Y3V2DK-H5B8CH-5JF4"
+api_key = ""
 
 # User Input for N2YO API, minimum parameters needed for visual pass or satellite positions
 def user_input():
@@ -45,3 +45,4 @@ def write_to_visualPass_db(json_data):
 # Satellite Positions: https://api.n2yo.com/rest/v1/satellite/positions/25544/41.702/-76.014/0/2/&apiKey=589P8Q-SDRYX8-L842ZD-5Z9
 
 # API License Key: 47PJFS-Y3V2DK-H5B8CH-5JF4
+
