@@ -2,9 +2,6 @@ import string
 import serial
 import time
 
-#port = "/dev/ttyUSB0"
-
-
 class SatSerial:
     """Implements the serial interface for motor control communication
 
@@ -63,22 +60,6 @@ class SatSerial:
             print(f"Sent: {data}")
         else:
             print("Serial connection not open.")
-
-    def send_interpolation_data(self, sat_path):
-        """Send interpolation data over serial using GOT commands
-
-        Args:
-            sat_path:
-                A list containing interpolation data points
-        """
-        interpolation_steps = sat_path[1][2] - sat_path[0][2]
-        millisecond_time = int(interpolation_steps * 1000)
-        for i in range(len(sat_path)-1):
-            response = self.receive()
-            while response != "ready":
-                response = self.receive()
-            self.send_got_command(int(sat_path[i][0]), int(sat_path[i][1]), millisecond_time)
-            time.sleep(interpolation_steps-2)
 
     def send_got_command(self, alt_angle: int, az_angle: int, az_time: int):
         """Send the GOT command over serial
