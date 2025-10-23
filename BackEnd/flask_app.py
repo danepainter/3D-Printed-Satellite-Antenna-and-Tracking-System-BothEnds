@@ -12,6 +12,7 @@ from sattracker.satpass import SatPass
 from sattracker.satinterpolation import SatInterpolation
 from sattracker.satserial import SatSerial
 import threading
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -19,6 +20,16 @@ app.config.from_object(Config)
 
 init_db(app)
 CORS(app)
+
+# Add near the top after imports
+live_process_status = {
+    'is_running': False,
+    'completed': False,
+    'success': False,
+    'message': '',
+    'completed_at': None,
+    'return_code': None
+}
 
 @app.route('/')
 def hello_world():
@@ -161,14 +172,77 @@ def interpolate_pass():
 @app.route('/satellite/start-live', methods=['POST'])
 def start_live_tracking():
     try:
+        print("Received request to start live tracking")
+        
+        # Reset status
+        global live_process_status
+        live_process_status = {
+            'is_running': True,
+            'completed': False,
+            'success': False,
+            'message': 'Live process started',
+            'completed_at': None,
+            'return_code': None
+        }
+        
         # Run in background thread so it doesn't block the API
-        thread = threading.Thread(target=live_process)
+        thread = threading.Thread(target=live_process_wrapper)
         thread.daemon = True
         thread.start()
         
+        print("Live tracking thread started successfully")
         return jsonify({'success': True, 'message': 'Live tracking started in background'})
     except Exception as e:
+        print(f"Error starting live tracking: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
+
+# Add new wrapper function
+def live_process_wrapper():
+    """Wrapper to track status of live_process"""
+    global live_process_status
+    try:
+        return_code = live_process()  # Will need to modify this to return status
+        live_process_status.update({
+            'is_running': False,
+            'completed': True,
+            'success': return_code == 0 if return_code is not None else True,
+            'message': 'Live process completed successfully' if return_code == 0 else 'Live process completed with errors',
+            'completed_at': datetime.now().isoformat(),
+            'return_code': return_code
+        })
+    except Exception as e:
+        live_process_status.update({
+            'is_running': False,
+            'completed': True,
+            'success': False,
+            'message': f'Live process failed: {str(e)}',
+            'completed_at': datetime.now().isoformat(),
+            'return_code': None
+        })
+
+# Add new status check endpoint
+@app.route('/satellite/live-status', methods=['GET'])
+def get_live_status():
+    """Check the status of the live process"""
+    return jsonify({
+        'success': True,
+        'status': live_process_status
+    })
+
+# Add endpoint to reset/acknowledge the completion
+@app.route('/satellite/live-status/reset', methods=['POST'])
+def reset_live_status():
+    """Reset the live process status (call after user acknowledges)"""
+    global live_process_status
+    live_process_status = {
+        'is_running': False,
+        'completed': False,
+        'success': False,
+        'message': '',
+        'completed_at': None,
+        'return_code': None
+    }
+    return jsonify({'success': True, 'message': 'Status reset'})
 
 if __name__ == '__main__':
     app.run(debug=True)

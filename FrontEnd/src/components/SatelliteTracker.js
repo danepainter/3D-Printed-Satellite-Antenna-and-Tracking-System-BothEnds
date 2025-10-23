@@ -147,6 +147,11 @@ const SatelliteTracker = () => {
       if (selectedSatellite) {
         setSelectedSatellite(prev => ({ ...prev, status: 'tracking' }));
       }
+      
+      // Start polling for status every 2 seconds
+      const interval = setInterval(checkLiveStatus, 2000);
+      setStatusCheckInterval(interval);
+      
       alert(result.message);
     }
   };
@@ -186,6 +191,51 @@ const SatelliteTracker = () => {
     return new Date(utcString * 1000).toLocaleString();
   };
 
+  // Add state for live process status
+  const [liveProcessStatus, setLiveProcessStatus] = useState(null);
+  const [statusCheckInterval, setStatusCheckInterval] = useState(null);
+
+  // Add function to check status
+  const checkLiveStatus = async () => {
+    try {
+      const response = await fetch('http://127.0.0.1:5000/satellite/live-status');
+      const result = await response.json();
+      
+      if (result.success && result.status.completed && !result.status.is_running) {
+        // Process has completed!
+        setLiveProcessStatus(result.status);
+        
+        // Show alert to user
+        alert(`Live Process Completed!\n${result.status.message}\nCompleted at: ${new Date(result.status.completed_at).toLocaleString()}`);
+        
+        // Stop polling
+        if (statusCheckInterval) {
+          clearInterval(statusCheckInterval);
+          setStatusCheckInterval(null);
+        }
+        
+        // Reset backend status after user sees it
+        await fetch('http://127.0.0.1:5000/satellite/live-status/reset', {
+          method: 'POST'
+        });
+        
+        setIsTracking(false);
+      }
+    } catch (error) {
+      console.error('Error checking live status:', error);
+    }
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (statusCheckInterval) {
+        clearInterval(statusCheckInterval);
+      }
+    };
+  }, [statusCheckInterval]);
+
+  // Optional: Add visual indicator in the UI
   return (
     <div className="satellite-tracker">
       <div className="tracker-header">
@@ -467,6 +517,14 @@ const SatelliteTracker = () => {
           observerCoords={observerCoords}
           onClose={handleClose3D}
         />
+      )}
+      {liveProcessStatus && liveProcessStatus.completed && (
+        <div className={`process-complete-banner ${liveProcessStatus.success ? 'success' : 'error'}`}>
+          <h4>Live Process Status</h4>
+          <p>{liveProcessStatus.message}</p>
+          <p>Completed at: {new Date(liveProcessStatus.completed_at).toLocaleString()}</p>
+          <button onClick={() => setLiveProcessStatus(null)}>Dismiss</button>
+        </div>
       )}
     </div>
   );

@@ -1204,3 +1204,56 @@
   }
 }
 
+.process-complete-banner {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  max-width: 400px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.process-complete-banner.success {
+  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 100%);
+  color: #000;
+}
+
+.process-complete-banner.error {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ff4444 100%);
+  color: #fff;
+}
+
+.process-complete-banner h4 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.process-complete-banner p {
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+.process-complete-banner button {
+  margin-top: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  color: inherit;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
