@@ -94,6 +94,8 @@ class SatInterpolation:
         az_interp_deg = (np.degrees(az_interp_rad) + 360.0) % 360.0
 
         az_interp_deg, el_interp_deg = _round_data(az_interp_deg, el_interp_deg, rounding_override)
-        times = [(times[0]-time) * 1000 for time in times] #convert second timestamps to millisecond time deltas
+        times = [(time-times[max(0,i-1)]) * 1000 for i,time in enumerate(times)] #convert second timestamps to millisecond time deltas
+
+        print(times)
         return _convert_to_python_values(times, az_interp_deg, el_interp_deg)
 
