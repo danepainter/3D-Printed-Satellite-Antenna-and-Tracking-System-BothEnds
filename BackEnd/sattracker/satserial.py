@@ -34,6 +34,9 @@ class SatSerial:
         self.timeout = timeout
         self.ser = None
 
+        self.connect()
+        self.send_ping_command()
+
     def connect(self):
         """Initializes serial connection and connects to port at specified baudrate
 
@@ -61,6 +64,22 @@ class SatSerial:
         else:
             print("Serial connection not open.")
 
+    def send_interpolation_data(self, sat_path):
+        """Send interpolation data over serial using GOT commands
+
+        Args:
+            sat_path:
+                A list containing interpolation data points
+        """
+        interpolation_steps = sat_path[1][2] - sat_path[0][2]
+        millisecond_time = int(interpolation_steps * 1000)
+        for i in range(len(sat_path)-1):
+            response = self.receive()
+            while response != "ready":
+                response = self.receive()
+            self.send_got_command(int(sat_path[i][0]), int(sat_path[i][1]), millisecond_time)
+            time.sleep(interpolation_steps-2)
+
     def send_got_command(self, alt_angle: int, az_angle: int, az_time: int):
         """Send the GOT command over serial
 
@@ -73,7 +92,7 @@ class SatSerial:
             az_angle:
                 An int representing azimuth angle
             az_time:
-                An int representing the specified time
+                An int representing the specified time in milliseconds
         """
         self._send(f"GOT {alt_angle} {az_angle} {az_time}")
 
