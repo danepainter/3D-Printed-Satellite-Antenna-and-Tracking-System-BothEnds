@@ -1,6 +1,7 @@
 #JUSTIN ISARAPHANICH 9/3/2025 LAST MODIFIED
 #FLASK APP FILE, CREATE THE FLASK APP AND THE ROUTES
 
+import time
 from flask import Flask, jsonify, request
 import os
 from flask_cors import CORS
@@ -19,6 +20,8 @@ from dotenv import load_dotenv
 load_dotenv
 app = Flask(__name__)
 app.config.from_object(Config)
+
+DEBUG_MODE = True #use fake api data for testing
 
 init_db(app)
 CORS(app)
@@ -129,24 +132,36 @@ def interpolate_pass():
                 'success': False,
                 'error': f'Missing required pass fields: {", ".join(missing_fields)}'
             }), 400
-        
         # Convert to SatPass object 
-        sat_pass = SatPass(
-            data['startAz'],
-            data['startEl'],
-            int(data['startUTC']),
-            data['maxAz'],
-            data['maxEl'],
-            int(data['maxUTC']),
-            data['endAz'],
-            data['endEl'],
-            int(data['endUTC'])
-        )
-        
-        # Generate interpolated satellite path (20 second intervals)
+        if(DEBUG_MODE):
+            sat_pass = SatPass(
+            311.57,
+            0.00,
+            time.time() + 30, #start 30 seconds from now
+            37.98,
+            52.19,
+            time.time() + 180, #peak at 3 minutes
+            118.6,
+            0.00,
+            time.time() +  360, #end at 6 minutes
+            )
+        else:
+            sat_pass = SatPass(
+                data['startAz'],
+                data['startEl'],
+                int(data['startUTC']),
+                data['maxAz'],
+                data['maxEl'],
+                int(data['maxUTC']),
+                data['endAz'],
+                data['endEl'],
+                int(data['endUTC'])
+            )
+
+        # Generate interpolated satellite path (5 second intervals)
+        increment = 5
         sat_interpolation = SatInterpolation(sat_pass)
-        sat_path = sat_interpolation.interp_satellite_path(20)
-        
+        sat_path = sat_interpolation.interp_satellite_path(increment)
         # Attempt serial communication (will fail without hardware)
         serial_status = None
         try:
@@ -156,7 +171,8 @@ def interpolate_pass():
             # Send first position as test
             if sat_path:
                 first_pos = sat_path[0]  # (az, el, time)
-                serial.send_got_command(first_pos[1], first_pos[0], first_pos[2])
+                serial.execute_pass(sat_path, sat_path[0][2],increment)
+
                 serial_status = 'Success: Serial commands sent'
             serial.close()
         except Exception as serial_error:

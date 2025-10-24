@@ -1,7 +1,9 @@
 import string
 import serial
 import time
-
+import datetime
+import itertools
+import sys
 class SatSerial:
     """Implements the serial interface for motor control communication
 
@@ -15,7 +17,7 @@ class SatSerial:
         ser:
             A serial object
     """
-    def __init__(self, port: string = "COM5", baudrate: int = 9600, timeout: int = 10):
+    def __init__(self, port: string = "/dev/ttyACM0", baudrate: int = 9600, timeout: int = 10):
         """Initializes instance with serial object and parameters
 
         Args:
@@ -60,6 +62,27 @@ class SatSerial:
             print(f"Sent: {data}")
         else:
             print("Serial connection not open.")
+
+    def block_until_ready(self):
+        while(self.receive() != "READY"):
+            time.sleep(.1)
+    def execute_pass(self, path,start_time,increment):
+        skip = False
+        print("Moving to start position")
+        self.send_got_command(path[0][1],path[0][0],10000)
+        time.sleep(10)
+        wait = start_time - time.time()
+        if wait > 0:
+            skip = True
+            print("Waiting for AOS: " + str(int(wait)) + "s")
+            time.sleep(wait)
+        for i in range(1,len(path)):
+            if(skip):
+                skip = False
+            else:
+                self.block_until_ready()
+            self.send_got_command(path[i][1],path[i][0],increment * 1000)
+            print("MOVING: {ALT}, {AZ}, {TIME}".format(ALT=path[i][1],AZ=path[i][0],TIME=increment * 1000))
 
     def send_got_command(self, alt_angle: int, az_angle: int, az_time: int):
         """Send the GOT command over serial
