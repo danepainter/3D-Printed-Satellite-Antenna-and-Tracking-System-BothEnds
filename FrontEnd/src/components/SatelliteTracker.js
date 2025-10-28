@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Clock, Navigation, Target, Search } from 'lucide-react';
 import './SatelliteTracker.css';
 import SatellitePass3D from './SatellitePass3d';
@@ -26,9 +26,22 @@ const SatelliteTracker = () => {
   const [isTracking, setIsTracking] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-    // New state for interpolate-pass endpoint
-    const [interpolatedPath, setInterpolatedPath] = useState(null);
-    const [serialAttempt, setSerialAttempt] = useState(null);
+  // New state for interpolate-pass endpoint
+  const [interpolatedPath, setInterpolatedPath] = useState(null);
+  const [serialAttempt, setSerialAttempt] = useState(null);
+
+const [liveParams, setLiveParams] = useState({
+  pipeline: 'generic_analog_demod',
+  outDir: '',           // leave empty to use backend default
+  source: 'rtlsdr',
+  frequency: '100.7e6',
+  sampleRate: '2.4e6',
+  gain: 30,
+  timeout: 30,
+  extraArgs: ''
+});
+
+  const [isLiveOptionsOpen, setIsLiveOptionsOpen] = useState(false);
 
   //3d pass functions
   const handleView3D = (pass) => {
@@ -140,23 +153,28 @@ const SatelliteTracker = () => {
 
 
   const handleStartTracking = async () => {
-    const result = await callBackendFunction('/satellite/start-live');
-    
+    const result = await callBackendFunction('/satellite/start-live', liveParams);
+  
     if (result?.success) {
       setIsTracking(true);
       if (selectedSatellite) {
         setSelectedSatellite(prev => ({ ...prev, status: 'tracking' }));
       }
-      
-      // Start polling for status every 2 seconds
-      const interval = setInterval(checkLiveStatus, 2000);
-      setStatusCheckInterval(interval);
-      
+  
+      if (!statusCheckIntervalRef.current) {
+        statusCheckIntervalRef.current = setInterval(checkLiveStatus, 2000);
+      }
+  
+    setIsLiveOptionsOpen(false);
       alert(result.message);
     }
   };
 
   const handleStopTracking = () => {
+    if (statusCheckIntervalRef.current) {
+      clearInterval(statusCheckIntervalRef.current);
+      statusCheckIntervalRef.current = null;
+    }
     setIsTracking(false);
     if (selectedSatellite) {
       setSelectedSatellite(prev => ({ ...prev, status: 'visible' }));
@@ -193,7 +211,7 @@ const SatelliteTracker = () => {
 
   // Add state for live process status
   const [liveProcessStatus, setLiveProcessStatus] = useState(null);
-  const [statusCheckInterval, setStatusCheckInterval] = useState(null);
+  const statusCheckIntervalRef = useRef(null);
 
   // Add function to check status
   const checkLiveStatus = async () => {
@@ -209,9 +227,9 @@ const SatelliteTracker = () => {
         alert(`Live Process Completed!\n${result.status.message}\nCompleted at: ${new Date(result.status.completed_at).toLocaleString()}`);
         
         // Stop polling
-        if (statusCheckInterval) {
-          clearInterval(statusCheckInterval);
-          setStatusCheckInterval(null);
+        if (statusCheckIntervalRef.current) {
+          clearInterval(statusCheckIntervalRef.current);
+          statusCheckIntervalRef.current = null;
         }
         
         // Reset backend status after user sees it
@@ -229,11 +247,12 @@ const SatelliteTracker = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (statusCheckInterval) {
-        clearInterval(statusCheckInterval);
+      if (statusCheckIntervalRef.current) {
+        clearInterval(statusCheckIntervalRef.current);
+        statusCheckIntervalRef.current = null;
       }
     };
-  }, [statusCheckInterval]);
+  }, []);
 
   // Optional: Add visual indicator in the UI
   return (
@@ -458,23 +477,102 @@ const SatelliteTracker = () => {
                   style={{ backgroundColor: getStatusColor(selectedSatellite.status) }}
                 ></div>
               </div>
-
               <div className="tracking-controls">
-                <button 
-                  className="track-btn primary"
-                  onClick={handleStartTracking}
-                  disabled={isTracking || isLoading}
-                >
-                  {isTracking ? 'Tracking...' : 'Start Live Tracking'}
-                </button>
-                
-                <button 
-                  className="track-btn secondary"
-                  onClick={handleStopTracking}
-                  disabled={!isTracking || isLoading}
-                >
-                  Stop Tracking
-                </button>
+                <div className="split-button">
+                  <button 
+                    className="track-btn primary"
+                    onClick={handleStartTracking}
+                    disabled={isTracking || isLoading}
+                  >
+                    {isTracking ? 'Tracking...' : 'Start Live Tracking'}
+                  </button>
+                  <button
+                    className="track-btn split caret"
+                    onClick={() => setIsLiveOptionsOpen(v => !v)}
+                    aria-expanded={isLiveOptionsOpen}
+                    disabled={isLoading}
+                    title="Live options"
+                  >
+                    ▾
+                  </button>
+
+                  {isLiveOptionsOpen && (
+                    <div className="live-options-panel">
+                      <h4>Live RF Parameters</h4>
+                      <div className="rf-grid">
+                        <div className="input-field">
+                          <label>Pipeline</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. generic_analog_demod"
+                            value={liveParams.pipeline}
+                            onChange={(e) => setLiveParams(p => ({ ...p, pipeline: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Output Dir (optional)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. C:\\path\\to\\SatDumpOut\\test"
+                            value={liveParams.outDir}
+                            onChange={(e) => setLiveParams(p => ({ ...p, outDir: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Source</label>
+                          <input
+                            type="text"
+                            value={liveParams.source}
+                            onChange={(e) => setLiveParams(p => ({ ...p, source: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Frequency</label>
+                          <input
+                            type="text"
+                            placeholder='e.g. 100.7e6 or 100700000'
+                            value={liveParams.frequency}
+                            onChange={(e) => setLiveParams(p => ({ ...p, frequency: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Sample Rate</label>
+                          <input
+                            type="text"
+                            placeholder='e.g. 2.4e6 or 2400000'
+                            value={liveParams.sampleRate}
+                            onChange={(e) => setLiveParams(p => ({ ...p, sampleRate: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Gain</label>
+                          <input
+                            type="number"
+                            value={liveParams.gain}
+                            onChange={(e) => setLiveParams(p => ({ ...p, gain: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Timeout (s)</label>
+                          <input
+                            type="number"
+                            value={liveParams.timeout}
+                            onChange={(e) => setLiveParams(p => ({ ...p, timeout: Number(e.target.value) }))}
+                          />
+                        </div>
+                        <div className="input-field" style={{ gridColumn: '1 / -1' }}>
+                          <label>Extra Args</label>
+                          <input
+                            type="text"
+                            placeholder="any additional satdump flags"
+                            value={liveParams.extraArgs}
+                            onChange={(e) => setLiveParams(p => ({ ...p, extraArgs: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
                 <button 
                   className="track-btn primary"

@@ -191,7 +191,9 @@ def interpolate_pass():
 def start_live_tracking():
     try:
         print("Received request to start live tracking")
-        
+
+        params = request.get_json() or {}
+
         # Reset status
         global live_process_status
         live_process_status = {
@@ -202,24 +204,25 @@ def start_live_tracking():
             'completed_at': None,
             'return_code': None
         }
-        
+
         # Run in background thread so it doesn't block the API
-        thread = threading.Thread(target=live_process_wrapper)
+        thread = threading.Thread(target=live_process_wrapper, args=(params,))
         thread.daemon = True
         thread.start()
-        
+
         print("Live tracking thread started successfully")
         return jsonify({'success': True, 'message': 'Live tracking started in background'})
     except Exception as e:
         print(f"Error starting live tracking: {str(e)}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
 # Add new wrapper function
-def live_process_wrapper():
+def live_process_wrapper(params):
     """Wrapper to track status of live_process"""
     global live_process_status
     try:
-        return_code = live_process()  # Will need to modify this to return status
+        return_code = live_process(params)
         live_process_status.update({
             'is_running': False,
             'completed': True,
@@ -237,7 +240,7 @@ def live_process_wrapper():
             'completed_at': datetime.now().isoformat(),
             'return_code': None
         })
-
+        
 # Add new status check endpoint
 @app.route('/satellite/live-status', methods=['GET'])
 def get_live_status():

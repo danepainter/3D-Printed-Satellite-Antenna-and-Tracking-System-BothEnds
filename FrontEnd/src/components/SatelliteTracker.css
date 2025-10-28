@@ -1257,3 +1257,42 @@
   }
 }
 
+/* Split button and live options dropdown for Start Live */
+.split-button {
+  display: inline-flex;
+  position: relative;
+  gap: 0;
+}
+
+.split-button .track-btn.primary {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.track-btn.split.caret {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding: 0 10px;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.live-options-panel {
+  position: absolute;
+  top: 110%;
+  left: 0;
+  z-index: 20;
+  min-width: 360px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.live-options-panel .rf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
