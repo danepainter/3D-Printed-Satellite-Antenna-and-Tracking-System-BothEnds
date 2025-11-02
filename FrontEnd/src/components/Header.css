@@ -4,15 +4,15 @@ body {
 }
 
 .header {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  background: linear-gradient(135deg, #14213D 0%, #000000 50%, #14213D 100%);
   box-shadow: 
-    0 2px 10px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    0 2px 10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(252, 163, 17, 0.1);
   position: sticky;
   top: 0;
   z-index: 1000;
   width: 100%;
-  border-bottom: 2px solid #2a4a6b;
+  border-bottom: 2px solid #FCA311;
   overflow: hidden;
   min-height: 80px;
 }
@@ -74,17 +74,17 @@ body {
 .logo-icon {
   width: 36px;
   height: 36px;
-  color: #ffd700;
-  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+  color: #FCA311;
+  filter: drop-shadow(0 0 8px rgba(252, 163, 17, 0.5));
   animation: solar-glow 3s ease-in-out infinite alternate;
 }
 
 @keyframes solar-glow {
   0% {
-    filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.5));
+    filter: drop-shadow(0 0 8px rgba(252, 163, 17, 0.5));
   }
   100% {
-    filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.8));
+    filter: drop-shadow(0 0 12px rgba(252, 163, 17, 0.8));
   }
 }
 
@@ -141,19 +141,19 @@ body {
 }
 
 .nav-link:hover {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.15) 0%, rgba(255, 255, 255, 0.05) 100%);
+  background: linear-gradient(135deg, rgba(252, 163, 17, 0.15) 0%, rgba(252, 163, 17, 0.05) 100%);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  color: #ffffff;
-  border-color: rgba(255, 215, 0, 0.3);
+  color: #FFFFFF;
+  border-color: rgba(252, 163, 17, 0.5);
 }
 
 .nav-link.active {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.05) 100%);
-  border-color: #ffd700;
-  color: #ffffff;
+  background: linear-gradient(135deg, rgba(252, 163, 17, 0.2) 0%, rgba(252, 163, 17, 0.05) 100%);
+  border-color: #FCA311;
+  color: #FFFFFF;
   box-shadow: 
-    0 4px 12px rgba(255, 215, 0, 0.3),
+    0 4px 12px rgba(252, 163, 17, 0.3),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
@@ -171,9 +171,9 @@ body {
   right: 20px;
   width: 8px;
   height: 8px;
-  background: #00ff88;
+  background: #FCA311;
   border-radius: 50%;
-  box-shadow: 0 0 10px rgba(0, 255, 136, 0.6);
+  box-shadow: 0 0 10px rgba(252, 163, 17, 0.6);
   animation: power-pulse 2s ease-in-out infinite;
 }
 

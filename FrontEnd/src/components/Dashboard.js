@@ -69,28 +69,28 @@ const Dashboard = () => {
       title: 'Antenna Status',
       value: systemStatus.antenna,
       icon: Wifi,
-      color: '#00d4ff',
+      color: systemStatus.antenna === 'Connected' ? '#10b981' : '#ef4444',
       status: systemStatus.antenna === 'Connected' ? 'good' : 'warning'
     },
     {
       title: 'Tracking Status', 
       value: systemStatus.tracking,
       icon: Satellite,
-      color: '#00ff88',
+      color: systemStatus.tracking === 'Active' ? '#10b981' : '#ef4444',
       status: systemStatus.tracking === 'Active' ? 'good' : 'warning'
     },
     {
       title: 'Signal Strength',
       value: systemStatus.signal,
       icon: Activity,
-      color: '#ff6b6b',
+      color: systemStatus.signal === 'Strong' ? '#10b981' : '#ef4444',
       status: systemStatus.signal === 'Strong' ? 'good' : 'warning'
     },
     {
       title: 'Satellites Tracked',
       value: systemStatus.satellites,
       icon: TrendingUp,
-      color: '#ffd93d',
+      color: systemStatus.satellites > 0 ? '#10b981' : '#ef4444',
       status: systemStatus.satellites > 0 ? 'good' : 'warning'
     }
   ];

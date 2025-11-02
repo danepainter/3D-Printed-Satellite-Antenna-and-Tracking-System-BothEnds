@@ -5,7 +5,7 @@
     width: 100vw;
     height: 100vh;
     background: 
-      linear-gradient(135deg, #000000 0%, #0a0a0a 50%, #1a1a2e 100%);
+      linear-gradient(135deg, #000000 0%, #14213D 50%, #000000 100%);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -69,10 +69,10 @@
   
   .pass-info h3,
   .animation-controls h3 {
-    color: #ffffff;
+    color: #FFFFFF;
     margin: 0 0 1rem 0;
     font-size: 1.2rem;
-    border-bottom: 2px solid #4A90E2;
+    border-bottom: 2px solid #FCA311;
     padding-bottom: 0.5rem;
   }
   
@@ -83,12 +83,12 @@
   }
   
   .info-item {
-    color: #e0e0e0;
+    color: #E5E5E5;
     font-size: 0.9rem;
     padding: 0.5rem;
     background: rgba(255, 255, 255, 0.05);
     border-radius: 6px;
-    border-left: 3px solid #4A90E2;
+    border-left: 3px solid #FCA311;
   }
   
   .control-buttons {
@@ -113,8 +113,8 @@
   }
   
   .control-btn.play {
-    background: linear-gradient(135deg, #4CAF50, #45a049);
-    color: white;
+    background: linear-gradient(135deg, #FCA311, #FCA311);
+    color: #000000;
   }
   
   .control-btn.stop {
@@ -123,8 +123,8 @@
   }
   
   .control-btn.reset {
-    background: linear-gradient(135deg, #ffa726, #ff9800);
-    color: white;
+    background: linear-gradient(135deg, #FCA311, #FCA311);
+    color: #000000;
   }
   
   .control-btn:hover {
@@ -154,12 +154,12 @@
   
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4A90E2, #7B68EE);
+    background: linear-gradient(90deg, #FCA311, #FCA311);
     border-radius: 4px;
   }
   
   .progress-text {
-    color: #4A90E2;
+    color: #FCA311;
     font-weight: 600;
     font-size: 0.9rem;
   }
@@ -170,12 +170,12 @@
     align-items: center;
     justify-content: center;
     height: 100%;
-    color: #e0e0e0;
+    color: #E5E5E5;
     text-align: center;
   }
   
   .no-data h3 {
-    color: #ff6b6b;
+    color: #FCA311;
     margin-bottom: 1rem;
   }
   
@@ -196,8 +196,8 @@
   }
 
   .view-3d-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, #FCA311 0%, #FCA311 100%);
+    color: #000000;
     border: none;
     padding: 0.8rem 1.5rem;
     border-radius: 8px;
@@ -213,7 +213,7 @@
   
   .view-3d-btn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    box-shadow: 0 4px 12px rgba(252, 163, 17, 0.6);
   }
 
 
@@ -240,7 +240,7 @@
     justify-content: space-between;
     margin-top: 0.25rem;
     font-size: 0.8rem;
-    color: #888;
+    color: #E5E5E5;
   }
   
   .start-time {
