@@ -63,16 +63,97 @@ def add_data():
 @app.route('/satellite/start-recording', methods=['POST'])
 def start_recording():
     try:
-        record_process()  # Call your Python function
-        return jsonify({'success': True, 'message': 'Recording started successfully'})
+        data = request.get_json() or {}
+
+        required_fields = ['outputName', 'source', 'sampleRate', 'frequency', 'basebandFormat']
+        missing = [field for field in required_fields if not data.get(field)]
+
+        if missing:
+            return jsonify({
+                'success': False,
+                'error': f"Missing required recording parameters: {', '.join(missing)}"
+            }), 400
+
+        payload = {
+            'outputName': data['outputName'],
+            'source': data['source'],
+            'sampleRate': data['sampleRate'],
+            'frequency': data['frequency'],
+            'basebandFormat': data['basebandFormat']
+        }
+
+        if data.get('bitDepth') is not None:
+            payload['bitDepth'] = data['bitDepth']
+
+        if data.get('timeout') is not None:
+            payload['timeout'] = data['timeout']
+
+        extra_args = data.get('extraArgs')
+        if isinstance(extra_args, str) and extra_args.strip():
+            payload['extraArgs'] = extra_args
+
+        return_code = record_process(payload)
+
+        if return_code != 0:
+            return jsonify({
+                'success': False,
+                'error': f'Recording process exited with code {return_code}'
+            }), 500
+
+        return jsonify({'success': True, 'message': 'Recording finished successfully'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/satellite/process-offline', methods=['POST'])
 def process_offline():
     try:
-        offline_process()
-        # Call your Python function
+        data = request.get_json() or {}
+
+        required_fields = ['pipeline', 'inputLevel', 'inputFile']
+        missing = [field for field in required_fields if not data.get(field)]
+
+        if missing:
+            return jsonify({
+                'success': False,
+                'error': f"Missing required offline parameters: {', '.join(missing)}"
+            }), 400
+
+        payload = {
+            'pipeline': data['pipeline'],
+            'inputLevel': data['inputLevel'],
+            'inputFile': data['inputFile'],
+        }
+
+        if data.get('outputDir'):
+            payload['outputDir'] = data['outputDir']
+
+        if data.get('samplerate') not in (None, '', 'null'):
+            payload['samplerate'] = data['samplerate']
+
+        if data.get('basebandFormat'):
+            payload['basebandFormat'] = data['basebandFormat']
+
+        if bool(data.get('dcBlock')):
+            payload['dcBlock'] = True
+
+        if data.get('freqShift') not in (None, '', 'null'):
+            payload['freqShift'] = data['freqShift']
+
+        if bool(data.get('iqSwap')):
+            payload['iqSwap'] = True
+
+        extra_args = data.get('extraArgs')
+        if isinstance(extra_args, str) and extra_args.strip():
+            payload['extraArgs'] = extra_args
+
+        return_code = offline_process(payload)
+
+        if return_code != 0:
+            return jsonify({
+                'success': False,
+                'error': f'Offline process exited with code {return_code}'
+            }), 500
+
         return jsonify({'success': True, 'message': 'Offline processing completed successfully'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500

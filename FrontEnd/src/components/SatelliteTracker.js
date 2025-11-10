@@ -30,18 +30,44 @@ const SatelliteTracker = () => {
   const [interpolatedPath, setInterpolatedPath] = useState(null);
   const [serialAttempt, setSerialAttempt] = useState(null);
 
-const [liveParams, setLiveParams] = useState({
-  pipeline: 'generic_analog_demod',
-  outDir: '',           // leave empty to use backend default
-  source: 'rtlsdr',
-  frequency: '100.7e6',
-  sampleRate: '2.4e6',
-  gain: 30,
-  timeout: 30,
-  extraArgs: ''
-});
+  const [liveParams, setLiveParams] = useState({
+    pipeline: 'generic_analog_demod',
+    outDir: '',           // leave empty to use backend default
+    source: 'rtlsdr',
+    frequency: '100.7e6',
+    sampleRate: '2.4e6',
+    gain: 30,
+    timeout: 30,
+    extraArgs: ''
+  });
+
+  const [recordParams, setRecordParams] = useState({
+    outputName: '',
+    source: 'rtlsdr',
+    sampleRate: '2000000',
+    frequency: '100700000',
+    basebandFormat: 'w16',
+    bitDepth: 8,
+    timeout: '',
+    extraArgs: ''
+  });
+
+  const [offlineParams, setOfflineParams] = useState({
+    pipeline: '',
+    inputLevel: 'baseband',
+    inputFile: '',
+    outputDir: '',
+    samplerate: '',
+    basebandFormat: '',
+    dcBlock: false,
+    freqShift: '',
+    iqSwap: false,
+    extraArgs: ''
+  });
 
   const [isLiveOptionsOpen, setIsLiveOptionsOpen] = useState(false);
+  const [isRecordOptionsOpen, setIsRecordOptionsOpen] = useState(false);
+  const [isOfflineOptionsOpen, setIsOfflineOptionsOpen] = useState(false);
 
   //3d pass functions
   const handleView3D = (pass) => {
@@ -182,18 +208,107 @@ const [liveParams, setLiveParams] = useState({
   };
 
   const handleStartRecording = async () => {
-    const result = await callBackendFunction('/satellite/start-recording');
+    const trimmedOutput = recordParams.outputName.trim();
+    const trimmedSource = recordParams.source.trim();
+    const sampleRateValue = recordParams.sampleRate.toString().trim();
+    const frequencyValue = recordParams.frequency.toString().trim();
+
+    if (!trimmedOutput || !trimmedSource || sampleRateValue === '' || frequencyValue === '') {
+      alert('Please fill in all required recording parameters.');
+      return;
+    }
+
+    const payload = {
+      outputName: trimmedOutput,
+      source: trimmedSource,
+      sampleRate: sampleRateValue,
+      frequency: frequencyValue,
+      basebandFormat: recordParams.basebandFormat
+    };
+
+    if (recordParams.basebandFormat === 'ziq' && recordParams.bitDepth !== '' && recordParams.bitDepth !== null) {
+      payload.bitDepth = Number(recordParams.bitDepth);
+    }
+
+    if (recordParams.timeout !== '' && recordParams.timeout !== null) {
+      const timeoutValue = Number(recordParams.timeout);
+      if (!Number.isNaN(timeoutValue)) {
+        payload.timeout = timeoutValue;
+      }
+    }
+
+    if (recordParams.extraArgs.trim()) {
+      payload.extraArgs = recordParams.extraArgs.trim();
+    }
+
+    const result = await callBackendFunction('/satellite/start-recording', payload);
     if (result?.success) {
+      setIsRecordOptionsOpen(false);
       alert(result.message);
     }
   };
 
   const handleProcessOffline = async () => {
-    const result = await callBackendFunction('/satellite/process-offline');
+    const payload = {
+      pipeline: offlineParams.pipeline.trim(),
+      inputLevel: offlineParams.inputLevel.trim(),
+      inputFile: offlineParams.inputFile.trim()
+    };
+
+    const missing = Object.entries(payload).filter(([_, value]) => !value);
+    if (missing.length) {
+      alert('Please fill in pipeline, input level, and input file.');
+      return;
+    }
+
+    const trimmedOutputDir = offlineParams.outputDir.trim();
+    if (trimmedOutputDir) {
+      payload.outputDir = trimmedOutputDir;
+    }
+
+    if (offlineParams.samplerate.toString().trim()) {
+      payload.samplerate = offlineParams.samplerate.toString().trim();
+    }
+
+    if (offlineParams.basebandFormat.trim()) {
+      payload.basebandFormat = offlineParams.basebandFormat.trim();
+    }
+
+    if (offlineParams.dcBlock) {
+      payload.dcBlock = true;
+    }
+
+    if (offlineParams.freqShift.toString().trim()) {
+      payload.freqShift = offlineParams.freqShift.toString().trim();
+    }
+
+    if (offlineParams.iqSwap) {
+      payload.iqSwap = true;
+    }
+
+    if (offlineParams.extraArgs.trim()) {
+      payload.extraArgs = offlineParams.extraArgs.trim();
+    }
+
+    const result = await callBackendFunction('/satellite/process-offline', payload);
     if (result?.success) {
+      setIsOfflineOptionsOpen(false);
       alert(result.message);
     }
   };
+
+  const isRecordDisabled =
+    isLoading ||
+    !recordParams.outputName.trim() ||
+    !recordParams.source.trim() ||
+    recordParams.sampleRate.toString().trim() === '' ||
+    recordParams.frequency.toString().trim() === '';
+
+  const isOfflineDisabled =
+    isLoading ||
+    !offlineParams.pipeline.trim() ||
+    !offlineParams.inputLevel.trim() ||
+    !offlineParams.inputFile.trim();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -488,7 +603,11 @@ const [liveParams, setLiveParams] = useState({
                   </button>
                   <button
                     className="track-btn split caret"
-                    onClick={() => setIsLiveOptionsOpen(v => !v)}
+                    onClick={() => {
+                      setIsLiveOptionsOpen(v => !v);
+                      setIsRecordOptionsOpen(false);
+                      setIsOfflineOptionsOpen(false);
+                    }}
                     aria-expanded={isLiveOptionsOpen}
                     disabled={isLoading}
                     title="Live options"
@@ -497,7 +616,7 @@ const [liveParams, setLiveParams] = useState({
                   </button>
 
                   {isLiveOptionsOpen && (
-                    <div className="live-options-panel">
+                    <div className="dropdown-panel live-options">
                       <h4>Live RF Parameters</h4>
                       <div className="rf-grid">
                         <div className="input-field">
@@ -574,21 +693,240 @@ const [liveParams, setLiveParams] = useState({
                   )}
                 </div>
 
-                <button 
-                  className="track-btn primary"
-                  onClick={handleStartRecording}
-                  disabled={isLoading}
-                >
-                  Start Recording
-                </button>
+                <div className="split-button">
+                  <button 
+                    className="track-btn primary"
+                    onClick={handleStartRecording}
+                    disabled={isRecordDisabled}
+                  >
+                    Start Recording
+                  </button>
+                  <button
+                    className="track-btn split caret"
+                    onClick={() => {
+                      setIsRecordOptionsOpen(v => !v);
+                      setIsLiveOptionsOpen(false);
+                      setIsOfflineOptionsOpen(false);
+                    }}
+                    aria-expanded={isRecordOptionsOpen}
+                    disabled={isLoading}
+                    title="Recording options"
+                  >
+                    ▾
+                  </button>
 
-                <button 
-                  className="track-btn secondary"
-                  onClick={handleProcessOffline}
-                  disabled={isLoading}
-                >
-                  Process Offline Data
-                </button>
+                  {isRecordOptionsOpen && (
+                    <div className="dropdown-panel record-options">
+                      <h4>Recording Parameters</h4>
+                      <div className="rf-grid">
+                        <div className="input-field">
+                          <label>Output Baseband Name</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. recordings/test_capture"
+                            value={recordParams.outputName}
+                            onChange={(e) => setRecordParams(p => ({ ...p, outputName: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Source</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. rtlsdr"
+                            value={recordParams.source}
+                            onChange={(e) => setRecordParams(p => ({ ...p, source: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Samplerate (Hz)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 2000000"
+                            value={recordParams.sampleRate}
+                            onChange={(e) => setRecordParams(p => ({ ...p, sampleRate: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Frequency (Hz)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. 137100000"
+                            value={recordParams.frequency}
+                            onChange={(e) => setRecordParams(p => ({ ...p, frequency: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Baseband Format</label>
+                          <select
+                            value={recordParams.basebandFormat}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setRecordParams(p => ({
+                                ...p,
+                                basebandFormat: value,
+                                bitDepth: value === 'ziq' ? (p.bitDepth || 8) : ''
+                              }));
+                            }}
+                          >
+                            <option value="w16">w16 (16-bit WAV)</option>
+                            <option value="ziq">ziq (I/Q)</option>
+                          </select>
+                        </div>
+                        {recordParams.basebandFormat === 'ziq' && (
+                          <div className="input-field">
+                            <label>Bit Depth (8/16/32)</label>
+                            <input
+                              type="number"
+                              min="8"
+                              max="32"
+                              step="8"
+                              value={recordParams.bitDepth}
+                              onChange={(e) => setRecordParams(p => ({
+                                ...p,
+                                bitDepth: e.target.value === '' ? '' : Number(e.target.value)
+                              }))}
+                            />
+                          </div>
+                        )}
+                        <div className="input-field">
+                          <label>Timeout (s, optional)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={recordParams.timeout}
+                            onChange={(e) => setRecordParams(p => ({ ...p, timeout: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field" style={{ gridColumn: '1 / -1' }}>
+                          <label>Extra Flags (optional)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. --bit_depth 16"
+                            value={recordParams.extraArgs}
+                            onChange={(e) => setRecordParams(p => ({ ...p, extraArgs: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="split-button">
+                  <button 
+                    className="track-btn secondary"
+                    onClick={handleProcessOffline}
+                    disabled={isOfflineDisabled}
+                  >
+                    Process Offline Data
+                  </button>
+                  <button
+                    className="track-btn split caret"
+                    onClick={() => {
+                      setIsOfflineOptionsOpen(v => !v);
+                      setIsLiveOptionsOpen(false);
+                      setIsRecordOptionsOpen(false);
+                    }}
+                    aria-expanded={isOfflineOptionsOpen}
+                    disabled={isLoading}
+                    title="Offline options"
+                  >
+                    ▾
+                  </button>
+
+                  {isOfflineOptionsOpen && (
+                    <div className="dropdown-panel offline-options">
+                      <h4>Offline Processing Parameters</h4>
+                      <div className="rf-grid">
+                        <div className="input-field" style={{ gridColumn: '1 / -1' }}>
+                          <label>Pipeline</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. metop_ahrpt"
+                            value={offlineParams.pipeline}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, pipeline: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Input Level</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. baseband"
+                            value={offlineParams.inputLevel}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, inputLevel: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Input File</label>
+                          <input
+                            type="text"
+                            placeholder="relative to SatDumpIn"
+                            value={offlineParams.inputFile}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, inputFile: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Output Dir</label>
+                          <input
+                            type="text"
+                            placeholder="relative or absolute"
+                            value={offlineParams.outputDir}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, outputDir: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Samplerate (optional)</label>
+                          <input
+                            type="text"
+                            value={offlineParams.samplerate}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, samplerate: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Baseband Format (optional)</label>
+                          <input
+                            type="text"
+                            placeholder="e.g. s16, ziq"
+                            value={offlineParams.basebandFormat}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, basebandFormat: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Freq Shift (Hz, optional)</label>
+                          <input
+                            type="text"
+                            value={offlineParams.freqShift}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, freqShift: e.target.value }))}
+                          />
+                        </div>
+                        <div className="input-field">
+                          <label>Extra Args</label>
+                          <input
+                            type="text"
+                            placeholder="any additional satdump flags"
+                            value={offlineParams.extraArgs}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, extraArgs: e.target.value }))}
+                          />
+                        </div>
+                        <label className="checkbox-row">
+                          <input
+                            type="checkbox"
+                            checked={offlineParams.dcBlock}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, dcBlock: e.target.checked }))}
+                          />
+                          <span>Enable DC Block</span>
+                        </label>
+                        <label className="checkbox-row">
+                          <input
+                            type="checkbox"
+                            checked={offlineParams.iqSwap}
+                            onChange={(e) => setOfflineParams(p => ({ ...p, iqSwap: e.target.checked }))}
+                          />
+                          <span>IQ Swap</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>

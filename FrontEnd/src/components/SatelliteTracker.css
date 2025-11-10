@@ -1257,7 +1257,7 @@
   }
 }
 
-/* Split button and live options dropdown for Start Live */
+/* Split buttons with shared dropdown parameter panels */
 .split-button {
   display: inline-flex;
   position: relative;
@@ -1277,7 +1277,7 @@
   line-height: 1;
 }
 
-.live-options-panel {
+.dropdown-panel {
   position: absolute;
   top: 110%;
   left: 0;
@@ -1290,9 +1290,41 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-.live-options-panel .rf-grid {
+.dropdown-panel h4 {
+  margin: 0 0 12px 0;
+  color: #FCA311;
+  font-size: 1rem;
+}
+
+.dropdown-panel .rf-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+
+.dropdown-panel.record-options {
+  min-width: 380px;
+}
+
+.dropdown-panel.record-options h4 {
+  color: #FCA311;
+}
+
+.dropdown-panel.offline-options h4 {
+  color: #10b981;
+}
+
+.dropdown-panel .checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: #fff;
+  grid-column: 1 / -1;
+}
+
+.dropdown-panel .checkbox-row input {
+  width: auto;
+  height: auto;
 }
 
