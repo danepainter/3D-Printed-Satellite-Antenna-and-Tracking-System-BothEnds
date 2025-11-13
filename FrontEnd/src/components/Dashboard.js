@@ -80,13 +80,6 @@ const Dashboard = () => {
       status: systemStatus.tracking === 'Active' ? 'good' : 'warning'
     },
     {
-      title: 'Signal Strength',
-      value: systemStatus.signal,
-      icon: Activity,
-      color: systemStatus.signal === 'Strong' ? '#10b981' : '#ef4444',
-      status: systemStatus.signal === 'Strong' ? 'good' : 'warning'
-    },
-    {
       title: 'Satellites Tracked',
       value: systemStatus.satellites,
       icon: TrendingUp,

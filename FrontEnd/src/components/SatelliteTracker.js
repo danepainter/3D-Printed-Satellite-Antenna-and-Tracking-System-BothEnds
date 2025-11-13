@@ -78,18 +78,49 @@ const SatelliteTracker = () => {
     setShow3DView(false);
     setSelectedPass(null);
   };
-  // Common satellite IDs for dropdown
-  const commonSatellites = [
-    { id: 25544, name: 'International Space Station (ISS)' },
-    { id: 40069, name: 'METEOR-M2' },
-    { id: 43013, name: 'NOAA-20' },
-    { id: 33591, name: 'NOAA-19' },
-    { id: 28654, name: 'NOAA-18' },
-    { id: 25338, name: 'NOAA-15' },
-    { id: 27424, name: 'AQUA' },
-    { id: 25994, name: 'TERRA' },
-    { id: 44387, name: 'METEOR-M2-2' }
-  ];
+
+// Common satellite IDs for dropdown
+const commonSatellites = [
+  { id: 25544, name: 'International Space Station (ISS)' },
+  { id: 40069, name: 'METEOR-M2' },
+  { id: 43013, name: 'NOAA-20' },
+  { id: 33591, name: 'NOAA-19' },
+  { id: 28654, name: 'NOAA-18' },
+  { id: 25338, name: 'NOAA-15' },
+  { id: 27424, name: 'AQUA' },
+  { id: 25994, name: 'TERRA' },
+  { id: 44387, name: 'METEOR-M2-2' },
+
+  // --- Geostationary weather satellites ---
+
+  // GOES (NOAA, Americas)
+  { id: 41866, name: 'GOES-16 (GOES-East)' },    // NORAD 41866
+  { id: 43226, name: 'GOES-17' },                // NORAD 43226 (spare / limited ops)
+  { id: 51850, name: 'GOES-18 (GOES-West)' },    // NORAD 51850
+  { id: 60133, name: 'GOES-19 (GOES-U)' },       // NORAD 60133
+
+  // Himawari (JMA, Western Pacific)
+  { id: 40267, name: 'Himawari-8' },             // NORAD 40267
+  { id: 41836, name: 'Himawari-9' },             // NORAD 41836
+
+  // Elektro-L (Russia)
+  { id: 37344, name: 'Elektro-L 1' },            // NORAD 37344
+  { id: 41105, name: 'Elektro-L 2' },            // NORAD 41105
+  { id: 44903, name: 'Elektro-L 3' },            // NORAD 44903
+  { id: 55506, name: 'Elektro-L 4' },            // NORAD 55506
+
+  // Meteosat (EUMETSAT, Europe/Africa)
+  { id: 38552, name: 'Meteosat-10 (MSG-3)' },    // NORAD 38552
+  { id: 40732, name: 'Meteosat-11 (MSG-4)' },    // NORAD 40732
+
+  // Korea (GK-2A / GEO-KOMPSAT-2A)
+  { id: 43823, name: 'GK-2A (GEO-KOMPSAT-2A)' }, // NORAD 43823
+
+  // China (Fengyun-4 series)
+  { id: 41882, name: 'Fengyun-4A' },             // NORAD 41882
+
+];
+
 
   // Function to call backend API
   const callBackendFunction = async (endpoint, data = {}) => {
@@ -151,6 +182,55 @@ const SatelliteTracker = () => {
     }
   };
 
+  // NEW: seek directly to current satellite position (good for GEO)
+  const handleSeekToPosition = async () => {
+    const data = {
+      id: searchParams.satelliteId,
+      observer_lat: observerCoords.latitude,
+      observer_lng: observerCoords.longitude,
+      observer_alt: observerCoords.altitude
+    };
+
+    const result = await callBackendFunction('/satellite/seek-position', data);
+
+    if (result?.success) {
+      const { azimuth, elevation, timestamp, serial_attempt } = result.data || {};
+
+      if (typeof azimuth === 'number' && typeof elevation === 'number') {
+        // Reuse interpolatedPath UI with a single point
+        setInterpolatedPath([
+          [azimuth, elevation, timestamp || Math.floor(Date.now() / 1000)]
+        ]);
+      }
+
+      if (serial_attempt) {
+        setSerialAttempt(serial_attempt);
+      } else {
+        setSerialAttempt('Seek command sent to rotator.');
+      }
+
+      // Make sure selectedSatellite exists so tracking UI looks sane
+      if (!selectedSatellite) {
+        const satName =
+          commonSatellites.find(s => s.id === searchParams.satelliteId)?.name ||
+          `NORAD ${searchParams.satelliteId}`;
+
+        setSelectedSatellite({
+          id: searchParams.satelliteId,
+          name: satName,
+          passes: [],
+          status: 'tracking'
+        });
+      } else {
+        setSelectedSatellite(prev => prev ? { ...prev, status: 'tracking' } : prev);
+      }
+
+      alert(
+        `Seeking to satellite position:\nAz: ${azimuth?.toFixed?.(1) ?? 'N/A'}°\nEl: ${elevation?.toFixed?.(1) ?? 'N/A'}°`
+      );
+    }
+  };
+
    // Process a specific pass through sattracker pipeline
    const handleInterpolatePass = async (pass) => {
     const passData = {
@@ -191,7 +271,7 @@ const SatelliteTracker = () => {
         statusCheckIntervalRef.current = setInterval(checkLiveStatus, 2000);
       }
   
-    setIsLiveOptionsOpen(false);
+      setIsLiveOptionsOpen(false);
       alert(result.message);
     }
   };
@@ -480,6 +560,13 @@ const SatelliteTracker = () => {
             >
               <Search size={20} />
               {isLoading ? 'Searching...' : 'Search Visual Passes'}
+            </button>
+            <button
+              className="search-btn primary"
+              onClick={handleSeekToPosition}
+              disabled={isLoading}
+            >
+              Seek To Position
             </button>
           </div>
         </div>
