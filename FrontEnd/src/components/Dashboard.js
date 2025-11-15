@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Activity, Satellite, Wifi, TrendingUp, Image } from 'lucide-react';
+import { Activity, Satellite, Wifi, TrendingUp, ListChecks } from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -124,7 +124,7 @@ const Dashboard = () => {
             Start Tracking
           </button>
           <button className="action-btn secondary" onClick={handleViewLogs}>
-            <Image className="btn-icon" />
+            <ListChecks className="btn-icon" />
             View Logs
           </button>
         </div>
