@@ -88,9 +88,9 @@ const SatelliteTracker = () => {
         body: JSON.stringify({
           satellite_name: satelliteName || 'Unknown',
           satellite_id: satelliteId || 0,
-          observer_lat: observerCoords.lat,
-          observer_lng: observerCoords.lng,
-          observer_alt: observerCoords.alt,
+          observer_lat: observerCoords.latitude,
+          observer_lng: observerCoords.longitude,
+          observer_alt: observerCoords.altitude,
           tracking_type: trackingType,
           status: 'Completed'
         })
