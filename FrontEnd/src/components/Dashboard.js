@@ -9,7 +9,8 @@ const Dashboard = () => {
     antenna: 'Loading...', 
     tracking: 'Loading...', 
     signal: 'Loading...', 
-    satellites: 0 
+    satellites: 0,
+    dbConnected: false
   });
 
   // Fetch system status from existing backend endpoints
@@ -18,19 +19,29 @@ const Dashboard = () => {
       try {
         // Check if backend is responding
         const response = await fetch('http://localhost:5000/');
-        const data = await response.text();
-        
-        // Check if backend is reachable (even if no specific satellite data exists)
         const backendResponding = response.ok;
         
-        // Try to get satellite data, but don't fail if it doesn't exist
+        // Fetch tracking logs count from database
+        let logCount = 0;
+        let dbConnected = false;
+        try {
+          const logsResponse = await fetch('http://localhost:5000/tracking-logs');
+          const logsData = await logsResponse.json();
+          if (logsData.success) {
+            logCount = logsData.logs.length;
+            dbConnected = true;
+          }
+        } catch (error) {
+          console.error('Failed to fetch tracking logs:', error);
+        }
+        
+        // Try to get satellite data (for tracking status)
         let hasSatelliteData = false;
         try {
           const satelliteResponse = await fetch('http://localhost:5000/1');
           const satelliteData = await satelliteResponse.json();
           hasSatelliteData = satelliteData.id && !satelliteData.Error;
         } catch (error) {
-          // Satellite data doesn't exist, but backend is still responding
           hasSatelliteData = false;
         }
         
@@ -39,7 +50,8 @@ const Dashboard = () => {
           antenna: backendResponding ? 'Connected' : 'Disconnected',
           tracking: hasSatelliteData ? 'Active' : 'Inactive', 
           signal: backendResponding ? 'Strong' : 'Weak',
-          satellites: hasSatelliteData ? 1 : 0
+          satellites: logCount,
+          dbConnected: dbConnected
         });
         
       } catch (error) {
@@ -49,7 +61,8 @@ const Dashboard = () => {
           antenna: 'Disconnected',
           tracking: 'Inactive',
           signal: 'Weak', 
-          satellites: 0
+          satellites: 0,
+          dbConnected: false
         });
       }
     };
@@ -83,8 +96,8 @@ const Dashboard = () => {
       title: 'Satellites Tracked',
       value: systemStatus.satellites,
       icon: TrendingUp,
-      color: systemStatus.satellites > 0 ? '#10b981' : '#ef4444',
-      status: systemStatus.satellites > 0 ? 'good' : 'warning'
+      color: systemStatus.dbConnected ? '#10b981' : '#ef4444',
+      status: systemStatus.dbConnected ? 'good' : 'warning'
     }
   ];
 
