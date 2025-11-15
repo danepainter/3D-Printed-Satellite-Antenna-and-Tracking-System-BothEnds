@@ -1,70 +1,50 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FileText, Download, Eye, Calendar, Satellite, Clock, MapPin, Activity } from 'lucide-react';
 import './ViewLogs.css';
 
 const ViewTrackLogs = () => {
   const [selectedLog, setSelectedLog] = useState(null);
   const [filter, setFilter] = useState('all');
+  const [trackLogs, setTrackLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sample track log data - replace with your actual track log data
-  const trackLogs = [
-    {
-      id: 1,
-      name: 'ISS_Track_001',
-      date: '2024-01-15',
-      time: '14:30:25',
-      satellite: 'ISS',
-      duration: '6m 23s',
-      maxElevation: '67°',
-      startAzimuth: 'SW',
-      endAzimuth: 'NE',
-      status: 'Completed',
-      fileSize: '2.4 MB',
-      url: '/api/logs/iss_track_001.log'
-    },
-    {
-      id: 2,
-      name: 'NOAA_18_Track_002',
-      date: '2024-01-15',
-      time: '16:45:12',
-      satellite: 'NOAA-18',
-      duration: '12m 45s',
-      maxElevation: '89°',
-      startAzimuth: 'W',
-      endAzimuth: 'E',
-      status: 'Completed',
-      fileSize: '3.1 MB',
-      url: '/api/logs/noaa_18_track_002.log'
-    },
-    {
-      id: 3,
-      name: 'METEOR_M2_Track_003',
-      date: '2024-01-14',
-      time: '09:22:45',
-      satellite: 'METEOR-M2',
-      duration: '8m 12s',
-      maxElevation: '45°',
-      startAzimuth: 'NW',
-      endAzimuth: 'SE',
-      status: 'Completed',
-      fileSize: '1.8 MB',
-      url: '/api/logs/meteor_m2_track_003.log'
-    },
-    {
-      id: 4,
-      name: 'ISS_Track_004',
-      date: '2024-01-14',
-      time: '11:15:30',
-      satellite: 'ISS',
-      duration: '5m 18s',
-      maxElevation: '23°',
-      startAzimuth: 'S',
-      endAzimuth: 'N',
-      status: 'Completed',
-      fileSize: '2.7 MB',
-      url: '/api/logs/iss_track_004.log'
-    }
-  ];
+  // Fetch tracking logs from backend
+  useEffect(() => {
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/tracking-logs');
+        const data = await response.json();
+        
+        if (data.success) {
+          // Transform backend data to UI format
+          const formattedLogs = data.logs.map(log => {
+            const date = new Date(log.date);
+            return {
+              id: log.id,
+              name: `${log.satellite_name}_Track_${log.id}`,
+              date: date.toLocaleDateString(),
+              time: date.toLocaleTimeString(),
+              satellite: log.satellite_name,
+              duration: log.tracking_type,
+              maxElevation: `${log.observer_lat.toFixed(2)}°`,
+              startAzimuth: `${log.observer_lng.toFixed(2)}°`,
+              endAzimuth: `Alt: ${log.observer_alt}m`,
+              status: log.status,
+              fileSize: 'N/A',
+              satelliteId: log.satellite_id
+            };
+          });
+          setTrackLogs(formattedLogs);
+        }
+      } catch (error) {
+        console.error('Failed to fetch tracking logs:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLogs();
+  }, []);
 
   const filteredLogs = filter === 'all' 
     ? trackLogs 
@@ -115,8 +95,17 @@ const ViewTrackLogs = () => {
         </div>
       </div>
 
-      <div className="images-grid">
-        {filteredLogs.map(log => (
+      {loading ? (
+        <div className="images-grid">
+          <p style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>Loading tracking logs...</p>
+        </div>
+      ) : filteredLogs.length === 0 ? (
+        <div className="images-grid">
+          <p style={{ textAlign: 'center', padding: '2rem', color: '#888' }}>No tracking logs found. Start tracking satellites to see logs here!</p>
+        </div>
+      ) : (
+        <div className="images-grid">
+          {filteredLogs.map(log => (
           <div key={log.id} className="image-card" onClick={() => handleLogClick(log)}>
             <div className="image-preview">
               <div className="image-placeholder">
@@ -157,8 +146,9 @@ const ViewTrackLogs = () => {
               </div>
             </div>
           </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
 
       {selectedLog && (
         <div className="image-modal" onClick={handleCloseModal}>

@@ -7,7 +7,7 @@ import os
 from flask_cors import CORS
 from config import Config
 from database import db, init_db
-from models import Data, Positions
+from models import Data, Positions, TrackingLog
 from src.sd_control import live_process, record_process, offline_process
 from src.n2yo_call import fetch_visualPasses, fetch_positions
 from sattracker.satpass import SatPass
@@ -486,6 +486,51 @@ def reset_live_status():
         "return_code": None,
     }
     return jsonify({"success": True, "message": "Status reset"})
+
+
+# Tracking logs endpoints
+@app.route("/tracking-logs/add", methods=["POST"])
+def add_tracking_log():
+    """Save a tracking session to the database"""
+    try:
+        data = request.get_json()
+        log = TrackingLog(
+            satellite_name=data.get('satellite_name', 'Unknown'),
+            satellite_id=data.get('satellite_id', 0),
+            observer_lat=data.get('observer_lat', 0),
+            observer_lng=data.get('observer_lng', 0),
+            observer_alt=data.get('observer_alt', 0),
+            tracking_type=data.get('tracking_type', 'unknown'),
+            status=data.get('status', 'Completed')
+        )
+        db.session.add(log)
+        db.session.commit()
+        return jsonify({"success": True, "message": "Tracking log saved"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+
+@app.route("/tracking-logs", methods=["GET"])
+def get_tracking_logs():
+    """Retrieve all tracking logs"""
+    try:
+        logs = TrackingLog.query.order_by(TrackingLog.date.desc()).all()
+        return jsonify({
+            "success": True,
+            "logs": [{
+                "id": log.id,
+                "satellite_name": log.satellite_name,
+                "satellite_id": log.satellite_id,
+                "date": log.date.isoformat(),
+                "observer_lat": log.observer_lat,
+                "observer_lng": log.observer_lng,
+                "observer_alt": log.observer_alt,
+                "tracking_type": log.tracking_type,
+                "status": log.status
+            } for log in logs]
+        })
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 if __name__ == "__main__":

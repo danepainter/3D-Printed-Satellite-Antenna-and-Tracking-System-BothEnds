@@ -79,6 +79,27 @@ const SatelliteTracker = () => {
     setSelectedPass(null);
   };
 
+  // Tracking log helper - saves tracking session to database
+  const saveTrackingLog = async (satelliteName, satelliteId, trackingType) => {
+    try {
+      await fetch('http://localhost:5000/tracking-logs/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          satellite_name: satelliteName || 'Unknown',
+          satellite_id: satelliteId || 0,
+          observer_lat: observerCoords.lat,
+          observer_lng: observerCoords.lng,
+          observer_alt: observerCoords.alt,
+          tracking_type: trackingType,
+          status: 'Completed'
+        })
+      });
+    } catch (error) {
+      console.error('Failed to save tracking log:', error);
+    }
+  };
+
 // Common satellite IDs for dropdown
 const commonSatellites = [
   { id: 25544, name: 'International Space Station (ISS)' },
@@ -225,6 +246,10 @@ const commonSatellites = [
         setSelectedSatellite(prev => prev ? { ...prev, status: 'tracking' } : prev);
       }
 
+      // Log tracking session
+      const satName = commonSatellites.find(s => s.id === searchParams.satelliteId)?.name || 'Unknown';
+      await saveTrackingLog(satName, searchParams.satelliteId, 'seek');
+
       alert(
         `Seeking to satellite position:\nAz: ${azimuth?.toFixed?.(1) ?? 'N/A'}°\nEl: ${elevation?.toFixed?.(1) ?? 'N/A'}°`
       );
@@ -253,6 +278,11 @@ const commonSatellites = [
       setSerialAttempt(result.serial_attempt);
       console.log('Interpolated path:', result.interpolated_path);
       console.log('Serial attempt:', result.serial_attempt);
+      
+      // Log tracking session
+      const satName = commonSatellites.find(s => s.id === searchParams.satelliteId)?.name || 'Unknown';
+      await saveTrackingLog(satName, searchParams.satelliteId, 'interpolate');
+      
       alert('Pass processed successfully! Check interpolated path below.');
     }
   };
@@ -270,6 +300,11 @@ const commonSatellites = [
       if (!statusCheckIntervalRef.current) {
         statusCheckIntervalRef.current = setInterval(checkLiveStatus, 2000);
       }
+  
+      // Log tracking session
+      const satName = selectedSatellite?.name || searchParams.satelliteId || 'Live Tracking';
+      const satId = selectedSatellite?.id || searchParams.satelliteId || 0;
+      await saveTrackingLog(satName, satId, 'live');
   
       setIsLiveOptionsOpen(false);
       alert(result.message);

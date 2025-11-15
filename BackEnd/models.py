@@ -31,3 +31,16 @@ class Positions(db.Model):
     ra = db.Column(db.Float, nullable=False)
     dec = db.Column(db.Float, nullable=False)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class TrackingLog(db.Model):
+    """Logs each satellite tracking session"""
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    satellite_name = db.Column(db.String(100), nullable=False)
+    satellite_id = db.Column(db.Integer, nullable=False)
+    date = db.Column(db.DateTime, default=datetime.utcnow)
+    observer_lat = db.Column(db.Float, nullable=False)
+    observer_lng = db.Column(db.Float, nullable=False)
+    observer_alt = db.Column(db.Float, nullable=False)
+    tracking_type = db.Column(db.String(50))  # 'live', 'interpolate', or 'seek'
+    status = db.Column(db.String(50), default='Completed')
